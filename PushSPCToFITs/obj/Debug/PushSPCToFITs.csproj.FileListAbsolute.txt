@@ -92,3 +92,4 @@ D:\2.Code\Github\nLight-Inc\PushSPCToFITs\PushSPCToFITs\bin\Debug\Serilog.xml
 D:\2.Code\Github\nLight-Inc\PushSPCToFITs\PushSPCToFITs\bin\Debug\Serilog.Sinks.Console.xml
 D:\2.Code\Github\nLight-Inc\PushSPCToFITs\PushSPCToFITs\bin\Debug\Serilog.Sinks.File.pdb
 D:\2.Code\Github\nLight-Inc\PushSPCToFITs\PushSPCToFITs\bin\Debug\Serilog.Sinks.File.xml
+D:\2.Code\Github\nLight-Inc\PushSPCToFITs\PushSPCToFITs\obj\Debug\PushSPCToFITs.csproj.AssemblyReference.cache

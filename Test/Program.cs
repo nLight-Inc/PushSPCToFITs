@@ -4,6 +4,8 @@ using PushSPCToFITs.Tasks;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using FITSDLL;
+
 
 namespace Test
 {
@@ -20,8 +22,9 @@ namespace Test
             Console.WriteLine("\nSPC Data Loading Starts:");
 
             ProductionTask SPCTask = ProductionTask.Instance;
-            //SPCTask.FITsConnection();
-            SPCTask.RunTask();
+            SPCTask.TestFITs();
+            //FITSDLL.clsDB objFITS = SPCTask.TestFITs();
+            //SPCTask.RunTask();
         }
     }
 }
