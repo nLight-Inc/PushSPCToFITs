@@ -18,15 +18,19 @@ namespace PushSPCToFITs.Models
         public string failureCode { get; set; }
         public string fbnWO { get; set; }
         public string supercarrierSN { get; set; }
+        public string sacStationNumber { get; set; }
+        public double sacPointing { get; set; }
         public double sacBeamWidth { get; set; }
         public double sacPower { get; set; }
         public string seStationNumber { get; set; }
         public double power { get; set; }
         public string modulePartNumber { get; set; }
         public string mtStationNumber { get; set; }
+        public string mirrorStationNumber { get; set; }
         public double voltage { get; set; }
         public double waveCentroid { get; set; }
-        public string snountTemperature { get; set; }
+        public double snoutTemperature { get; set; }
         public string chipletPartNumber { get; set; }
+        public double wavelength { get; set; }
     }
 }

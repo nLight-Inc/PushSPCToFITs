@@ -176,7 +176,6 @@
     <Compile Include="Helpers\RunFITsDLL.cs" />
     <Compile Include="Helpers\SendEmail.cs" />
     <Compile Include="Helpers\StartLogging.cs" />
-    <Compile Include="Models\FITsLabelParams.cs" />
     <Compile Include="Models\FITsRequestParams.cs" />
     <Compile Include="Models\FITsResultParams.cs" />
     <Compile Include="Models\GetPendingData.cs" />

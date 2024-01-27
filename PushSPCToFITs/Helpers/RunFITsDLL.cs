@@ -14,13 +14,10 @@ namespace PushSPCToFITs.Helpers
 {
     public class RunFITsDLL
     {
-        public clsDB _objFITs;
-
-        public RunFITsDLL()
-        {
-            _objFITs = GetFITsConnection();
-        }
-
+        /// <summary>
+        /// Get FITs object through FITSDLL fn_Logon function
+        /// </summary>
+        /// <returns></returns>
         public clsDB GetFITsConnection()
         {
             Log.Information($"The FITsConnection function starts. ");
@@ -46,9 +43,9 @@ namespace PushSPCToFITs.Helpers
             catch (Exception e)
             {
                 StringBuilder body = new StringBuilder();
-                body.AppendLine().Append("\n\nThe PushSPCToFITs service cannot logon FITSDLL");
+                body.AppendLine().Append("\n\nThe PushSPCToFITs service cannot run logon using FITSDLL");
                 body.AppendLine().Append("\n\nRefer to error message: " + e.Message);
-                string subject = "[SW Alert]: PushSPCToFITs service cannot logon FITSDLL";
+                string subject = "[SW Alert]: PushSPCToFITs service cannot run logon using FITSDLL";
                 SendEmail.SendNotification(body.ToString(), subject);
 
                 Log.Error($"Class-- >{this.GetType().Name} Method-->{System.Reflection.MethodBase.GetCurrentMethod().Name}   Error-->{e.Message}");
@@ -84,9 +81,9 @@ namespace PushSPCToFITs.Helpers
             catch (Exception e)
             {
                 StringBuilder body = new StringBuilder();
-                body.AppendLine().Append("\n\nThe PushSPCToFITs service cannot fn_Handshake FITSDLL");
+                body.AppendLine().Append("\n\nThe PushSPCToFITs service cannot run fn_Handshake using FITSDLL");
                 body.AppendLine().Append("\n\nRefer to error message: " + e.Message);
-                string subject = "[SW Alert]: PushSPCToFITs service cannot fn_Handshake FITSDLL";
+                string subject = "[SW Alert]: PushSPCToFITs service cannot run fn_Handshake using FITSDLL";
                 SendEmail.SendNotification(body.ToString(), subject);
 
                 Log.Error($"Class-- >{this.GetType().Name} Method-->{System.Reflection.MethodBase.GetCurrentMethod().Name}   Error-->{e.Message}");
@@ -95,285 +92,202 @@ namespace PushSPCToFITs.Helpers
             return trackingNumber;
         }
 
-        public FITsRequestParams GetRequestParams (ICollection<GetPendingData> pendingData, string trackingNumber)
+        public FITsRequestParams GetSPCRequestParams (clsDB objFITs, ICollection<GetPendingData> pendingData)
         {
-            FITsRequestParams requestParams  = new FITsRequestParams();
-
-            GetPendingData gdf = pendingData.First();
-
-            string modelType = string.Empty;
-            string operation = string.Empty;
-            string serialNumber = gdf.SerialNumber;
-            string labelParams = string.Empty;
-            string resultParams = string.Empty;
-            string revision = "";
-            string fsp = ",";
-            string employeeNo = "000001"; //To be replaced by real 6 digital number recognized by FITs
-            string shift = "";
-            string machine = gdf.Process;
-            DateTime timeTest = Convert.ToDateTime(gdf.tmTest);
-            string timestampStr = timeTest.ToString("yyyy-MM-dd hh:mm:ss");
-            DateTime timeTestFITs = DateTime.ParseExact(timestampStr, "yyyy-MM-dd hh:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
-
-
-
-            //For SPC11: element fac golden sample
-            string goldenSampleSN = gdf.SerialNumber;
-            string facStationNo = gdf.Process;
-            double facBeamWidth;
-            double facPointing;
-
-            //For SPC12: element fac dev from target
-            string FBNWO = gdf.WorkOrder;
-            string supercarrierSN = gdf.SerialNumber;
-            string scPartNumber = gdf.Part;
-
-            //For SPC13: element sac golden sample
-            string sacStationNo = gdf.Process;
-            double sacBeamWidth;
-            double sacPower;
-
-            //For SPC14: element sac
-            double sacPointing;
-
-            //For SPC15: se golden sample for COS
-            string seStationNo = gdf.Process;
-            double power;
-            double wavelength;
-
-            //For SPC16: element mirror golden sample
-            string mirrorStationNo = gdf.Process;
-
-            //For SPC17: element mt golden sample
-            string mtStationNo = gdf.Process;
-            double voltage;
-            double waveCentroid;
-            double snoutTemperature;
-
-            //For SPC04: se golden sample for Chiplet
-
-            foreach (GetPendingData gd in pendingData)
-            {
-                switch (gdf.ChartName + ", " + gd.ParameterName)
-                {
-                    case "element fac golden sample, BW":
-                        facBeamWidth = Convert.ToDouble(gd.ParameterValue);
-                        break;
-                    case "element fac golden sample, Pointing":
-                        facPointing = Convert.ToDouble(gd.ParameterValue);
-                        break;
-                    case "element fac dev from target, FA 1/e2 dev from target":
-                        facBeamWidth = Convert.ToDouble(gd.ParameterValue);
-                        break;
-                    case "element fac dev from target, FA centroid dev from target":
-                        facPointing = Convert.ToDouble(gd.ParameterValue);
-                        break;
-                    case "element sac golden sample, FA BW":
-                        facBeamWidth = Convert.ToDouble(gd.ParameterValue);
-                        break;
-                    case "element sac golden sample, FA Pointing":
-                        facPointing = Convert.ToDouble(gd.ParameterValue);
-                        break;
-                    case "element sac golden sample, SA BW":
-                        sacBeamWidth = Convert.ToDouble(gd.ParameterValue);
-                        break;
-                    case "element sac golden sample, SAC Power":
-                        sacPower = Convert.ToDouble(gd.ParameterValue);
-                        break;
-                    case "element sac, element SA 1/e2":
-                        sacBeamWidth = Convert.ToDouble(gd.ParameterValue);
-                        break;
-                    case "element sac, element SA centroid":
-                        sacPointing = Convert.ToDouble(gd.ParameterValue);
-                        break;
-                    case "element sac, element SAC Power":
-                        sacPower = Convert.ToDouble(gd.ParameterValue);
-                        break;
-                    case "se golden sample, GS Power":
-                        power = Convert.ToDouble(gd.ParameterValue);
-                        break;
-                    case "se golden sample, GS Wave centroid":
-                        wavelength = Convert.ToDouble(gd.ParameterValue);
-                        break;
-                    case "element mirror golden sample, GS Power":
-                        power = Convert.ToDouble(gd.ParameterValue);
-                        break;
-                    case "element mt golden sample, GS voltage":
-                        voltage = Convert.ToDouble(gd.ParameterValue);
-                        break;
-                    case "element mt golden sample, GS Power":
-                        power = Convert.ToDouble(gd.ParameterValue);
-                        break;
-                    case "element mt golden sample, GS Wave centroid":
-                        waveCentroid = Convert.ToDouble(gd.ParameterValue);
-                        break;
-                    case "element mt golden sample, GS Snout temperature":
-                        snoutTemperature = Convert.ToDouble(gd.ParameterValue);
-                        break;
-
-                }
-            }
-            switch (gdf.ChartName)
-            {                
-                case "element fac golden sample":
-                    labelParams = "Tracking number,Golden Sample SN,FAC Station#,FAC Beam Width,FAC Pointing";
-                    modelType = "SPC for Element";
-                    operation = "SPC11";
-                    break;
-                case "element fac dev from target":
-                    labelParams = "Tracking number,FBN W/O,Supercarrier SN,SC Part number,FAC Station#,FAC Beam Width,FAC Pointing";
-                    modelType = "SPC for Element";
-                    operation = "SPC12";
-                    break;
-                case "element sac golden sample":
-                    labelParams = "Tracking number,Golden Sample SN,SAC station#,FAC Beam Width,FAC Pointing,SAC Beam Width,SAC Power";
-                    modelType = "SPC for Element";
-                    operation = "SPC13";
-                    break;
-                case "element sac":
-                    labelParams = "Tracking number,FBN W/O,Supercarrier SN,SC Part number,SAC Station#,SAC Beam Width,SAC Pointing,SAC Power";
-                    modelType = "SPC for Element";
-                    operation = "SPC14";
-                    break;
-                case "element mirror golden sample":
-                    labelParams = "Tracking number,Golden Sample SN,Mirror Station#,Power";
-                    modelType = "SPC for Element";
-                    operation = "SPC16";
-                    break;
-                case "element mt golden sample":
-                    labelParams = "Tracking number,Golden Sample SN,MT Station#,Voltage,Power,Wave Centroid,Snout Temperature";
-                    modelType = "SPC for Element";
-                    operation = "SPC17";
-                    break;                                
-                case "se golden sample":
-                    if (gdf.PartGroup == "GS CS") //for PartGroup=GS CS
-                    {
-                        labelParams = "Tracking number,Golden Sample SN,SE Station#,Power,Wavelength";
-                        modelType = "SPC for Element";
-                        operation = "SPC15";
-                    }
-                    else //for PartGroup=GS Pearl Chiplet
-                    {
-                        labelParams = "Tracking number,Golden Sample SN,SE Station#,Power,Wavelength";
-                        modelType = "SPC for Pearl";
-                        operation = "SPCP04";
-                    }
-                    break;
-            }
-
-            //resultParams = trackingNumber + "," + goldenSampleSN + "," + facStationNo + "," + 
-            
-                
-            
-
-            return requestParams;
-        }
-
-        public FITsResultParams GetResultParams(ICollection<GetPendingData> pendingData)
-        {
-            FITsResultParams resultParams = new FITsResultParams();
-            return resultParams;
-        }
-
-
-        public bool InsertFITs (clsDB objFITs, ICollection<GetPendingData> pendingData, FITsRequestParams requestParams, FITsResultParams resultParams)
-        {
+            FITsRequestParams requestParams = new FITsRequestParams();
             try
-            {
-                int operationType = 0;
-                string modelType = string.Empty;
-                string operation = string.Empty;
+            {                
+                FITsResultParams resultParams = new FITsResultParams();
+
                 GetPendingData gdf = pendingData.First();
-                string serialNumber = gdf.SerialNumber;
-                string labelParams = "Tracking number,Golden Sample SN,Golden Count time,SC Part number,FAC Station#,FAC Beam Width,FAC Pointing,Comment,Result,Failure code";
-                string SCPartNumber = gdf.ChartName;
-                string revision = "";
-                string fsp = ",";
-                string employeeNo = "000001";
-                string shift = "";
-                string machine = gdf.Process;
+
+                requestParams.operationType = 0;
+                requestParams.revision = "";
+                requestParams.fsp = ",";
+                requestParams.employeeNo = "000001"; //To be replaced by real 6 digital number recognized by FITs
+                requestParams.shift = "";
+                requestParams.machine = gdf.Process;
                 DateTime timeTest = Convert.ToDateTime(gdf.tmTest);
                 string timestampStr = timeTest.ToString("yyyy-MM-dd hh:mm:ss");
-                DateTime timeTestFITs = DateTime.ParseExact(timestampStr, "yyyy-MM-dd hh:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
-                string comment = "Test";
-                string result = "NA";
-                string failureCode = "0";
-
-                //For SPC12:
-                string FBNWO = gdf.WorkOrder;
-                string supercarrier = string.Empty;
-
-                //For SPC11:
-                string GoldenCountTime = "1";
-                float FACBeanWidth;
-                float FACPointing;
-
-                //For SPC16
-
-                switch (gdf.ChartName)
-                {
-                    case "element fac dev from target":
-                        modelType = "SPC for Element";
-                        operation = "SPC12";
-                        break;
-                    case "element fac golden sample":
-                        modelType = "SPC for Element";
-                        operation = "SPC11";
-
-
-                        break;
-                    case "element mirror golden sample":
-                        modelType = "SPC for Element";
-                        operation = "SPC16";
-                        break;
-                    case "element mt golden sample":
-                        modelType = "SPC for Element";
-                        operation = "SPC17";
-                        break;
-                    case "element sac":
-                        modelType = "SPC for Element";
-                        operation = "SPC14";
-                        break;
-                    case "element sac golden sample":
-                        modelType = "SPC for Element";
-                        operation = "SPC13";
-                        break;
-                    case "se golden sample":
-                        if (gdf.PartGroup == "GS CS") //for PartGroup=GS CS
-                        {
-                            modelType = "SPC for Element";
-                            operation = "SPC15";
-                        }
-                        else //for PartGroup=GS Pearl Chiplet
-                        {
-                            modelType = "SPC for Pearl";
-                            operation = "SPCP04";
-                        }
-                        break;
-                }
+                requestParams.timeTestFITs = DateTime.ParseExact(timestampStr, "yyyy-MM-dd hh:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
 
                 foreach (GetPendingData gd in pendingData)
                 {
+                    switch (gdf.ChartName + ", " + gd.ParameterName)
+                    {
+                        case "element fac golden sample, BW":
+                            resultParams.facBeamWidth = Convert.ToDouble(gd.ParameterValue);
+                            break;
+                        case "element fac golden sample, Pointing":
+                            resultParams.facPointing = Convert.ToDouble(gd.ParameterValue);
+                            break;
+                        case "element fac dev from target, FA 1/e2 dev from target":
+                            resultParams.facBeamWidth = Convert.ToDouble(gd.ParameterValue);
+                            break;
+                        case "element fac dev from target, FA centroid dev from target":
+                            resultParams.facPointing = Convert.ToDouble(gd.ParameterValue);
+                            break;
+                        case "element sac golden sample, FA BW":
+                            resultParams.facBeamWidth = Convert.ToDouble(gd.ParameterValue);
+                            break;
+                        case "element sac golden sample, FA Pointing":
+                            resultParams.facPointing = Convert.ToDouble(gd.ParameterValue);
+                            break;
+                        case "element sac golden sample, SA BW":
+                            resultParams.sacBeamWidth = Convert.ToDouble(gd.ParameterValue);
+                            break;
+                        case "element sac golden sample, SAC Power":
+                            resultParams.sacPower = Convert.ToDouble(gd.ParameterValue);
+                            break;
+                        case "element sac, element SA 1/e2":
+                            resultParams.sacBeamWidth = Convert.ToDouble(gd.ParameterValue);
+                            break;
+                        case "element sac, element SA centroid":
+                            resultParams.sacPointing = Convert.ToDouble(gd.ParameterValue);
+                            break;
+                        case "element sac, element SAC Power":
+                            resultParams.sacPower = Convert.ToDouble(gd.ParameterValue);
+                            break;
+                        case "se golden sample, GS Power":
+                            resultParams.power = Convert.ToDouble(gd.ParameterValue);
+                            break;
+                        case "se golden sample, GS Wave centroid":
+                            resultParams.wavelength = Convert.ToDouble(gd.ParameterValue);
+                            break;
+                        case "element mirror golden sample, GS Power":
+                            resultParams.power = Convert.ToDouble(gd.ParameterValue);
+                            break;
+                        case "element mt golden sample, GS voltage":
+                            resultParams.voltage = Convert.ToDouble(gd.ParameterValue);
+                            break;
+                        case "element mt golden sample, GS Power":
+                            resultParams.power = Convert.ToDouble(gd.ParameterValue);
+                            break;
+                        case "element mt golden sample, GS Wave centroid":
+                            resultParams.waveCentroid = Convert.ToDouble(gd.ParameterValue);
+                            break;
+                        case "element mt golden sample, GS Snout temperature":
+                            resultParams.snoutTemperature = Convert.ToDouble(gd.ParameterValue);
+                            break;
+                    }
+                }
+                switch (gdf.ChartName)
+                {
+                    case "element fac golden sample":
+                        requestParams.labelParams = "Tracking number,Golden Sample SN,FAC Station#,FAC Beam Width,FAC Pointing";
+                        requestParams.modelType = "SPC for Element";
+                        requestParams.operation = "SPC11";
+                        resultParams.goldenSampleSN = gdf.SerialNumber;
+                        resultParams.facStationNumber = gdf.Process;
 
+                        requestParams.resultParams = resultParams.goldenSampleSN + "," + resultParams.facStationNumber + "," + Convert.ToString(resultParams.facBeamWidth) + "," + Convert.ToString(resultParams.facPointing);
+                        break;
+                    case "element fac dev from target":
+                        requestParams.labelParams = "Tracking number,FBN W/O,Supercarrier SN,SC Part number,FAC Station#,FAC Beam Width,FAC Pointing";
+                        requestParams.modelType = "SPC for Element";
+                        requestParams.operation = "SPC12";
+                        resultParams.fbnWO = gdf.WorkOrder;
+                        resultParams.supercarrierSN = gdf.SerialNumber;
+                        resultParams.scPartNumber = gdf.Part;
+                        resultParams.facStationNumber = gdf.Process;
+
+                        requestParams.resultParams = resultParams.fbnWO + "," + resultParams.supercarrierSN + "," + resultParams.scPartNumber + Convert.ToString(resultParams.facBeamWidth) + "," + Convert.ToString(resultParams.facPointing);
+                        break;
+                    case "element sac golden sample":
+                        requestParams.labelParams = "Tracking number,Golden Sample SN,SAC station#,FAC Beam Width,FAC Pointing,SAC Beam Width,SAC Power";
+                        requestParams.modelType = "SPC for Element";
+                        requestParams.operation = "SPC13";
+                        resultParams.goldenSampleSN = gdf.SerialNumber;
+                        resultParams.sacStationNumber = gdf.Process;
+
+                        requestParams.resultParams = resultParams.goldenSampleSN + "," + resultParams.sacStationNumber + "," + Convert.ToString(resultParams.facBeamWidth) + Convert.ToString(resultParams.facPointing) + "," + Convert.ToString(resultParams.sacBeamWidth) + "," + Convert.ToString(resultParams.sacPower);
+                        break;
+                    case "element sac":
+                        requestParams.labelParams = "Tracking number,FBN W/O,Supercarrier SN,SC Part number,SAC Station#,SAC Beam Width,SAC Pointing,SAC Power";
+                        requestParams.modelType = "SPC for Element";
+                        requestParams.operation = "SPC14";
+                        resultParams.supercarrierSN = gdf.SerialNumber;
+                        resultParams.scPartNumber = gdf.Part;
+                        resultParams.sacStationNumber = gdf.Process;
+
+                        requestParams.resultParams = resultParams.fbnWO + "," + resultParams.supercarrierSN + "," + resultParams.scPartNumber + Convert.ToString(resultParams.sacBeamWidth) + "," + Convert.ToString(resultParams.sacPointing) + "," + Convert.ToString(resultParams.sacPower);
+                        break;
+                    case "element mirror golden sample":
+                        requestParams.labelParams = "Tracking number,Golden Sample SN,Mirror Station#,Power";
+                        requestParams.modelType = "SPC for Element";
+                        requestParams.operation = "SPC16";
+                        resultParams.goldenSampleSN = gdf.SerialNumber;
+                        resultParams.mirrorStationNumber = gdf.Process;
+
+                        requestParams.resultParams = resultParams.goldenSampleSN + "," + resultParams.mirrorStationNumber + "," + Convert.ToString(resultParams.power);
+                        break;
+                    case "element mt golden sample":
+                        requestParams.labelParams = "Tracking number,Golden Sample SN,MT Station#,Voltage,Power,Wave Centroid,Snout Temperature";
+                        requestParams.modelType = "SPC for Element";
+                        requestParams.operation = "SPC17";
+                        resultParams.goldenSampleSN = gdf.SerialNumber;
+                        resultParams.mtStationNumber = gdf.Process;
+
+                        requestParams.resultParams = resultParams.goldenSampleSN + "," + resultParams.mtStationNumber + "," + Convert.ToString(resultParams.voltage) + "," + Convert.ToString(resultParams.power) + "," + Convert.ToString(resultParams.waveCentroid) + "," + Convert.ToString(resultParams.snoutTemperature);
+                        break;
+                    case "se golden sample":
+                        requestParams.labelParams = "Tracking number,Golden Sample SN,SE Station#,Power,Wavelength";
+
+                        resultParams.goldenSampleSN = gdf.SerialNumber;
+                        resultParams.seStationNumber = gdf.Process;
+                        if (gdf.PartGroup == "GS CS") //for PartGroup=GS CS
+                        {
+                            requestParams.modelType = "SPC for Element";
+                            requestParams.operation = "SPC15";
+                        }
+                        else //for PartGroup=GS Pearl Chiplet
+                        {
+                            requestParams.modelType = "SPC for Pearl";
+                            requestParams.operation = "SPCP04";
+                        }
+                        requestParams.resultParams = resultParams.goldenSampleSN + "," + resultParams.seStationNumber + "," + Convert.ToString(resultParams.power) + "," + Convert.ToString(resultParams.wavelength);
+                        break;
                 }
 
-                string labelResults2 = resultParams.trackingNumber + ",T59CHU,1,GS element FAC,FAC No.5,1.640064,272.04,Test,PASS,0";
-                Log.Information($"labelParams: {labelParams}");
-                Log.Information($"labelResults: {labelResults2}");
-                ServiceResult objResult = objFITs.fn_Insert(operationType, modelType, operation, labelParams, labelResults2, fsp, employeeNo, shift, machine, timeTestFITs, revision);
-                Log.Information($"The FITs fn_Insert with Tracking number result is {objResult.result}, messge is {objResult.message}, outputValue is {objResult.outputValue.ToString()} ");
+                resultParams.trackingNumber = GetTrackingNumber(objFITs, requestParams, resultParams);
+                requestParams.resultParams = resultParams.trackingNumber + "," + requestParams.resultParams;
             }
             catch (Exception e)
             {
                 StringBuilder body = new StringBuilder();
-                body.AppendLine().Append("\n\nThe PushSPCToFITs service cannot logon FITSDLL");
+                body.AppendLine().Append("\n\nThe PushSPCToFITs service cannot run GetSPCRequestParams");
                 body.AppendLine().Append("\n\nRefer to error message: " + e.Message);
-                string subject = "[SW Alert]: PushSPCToFITs service cannot logon FITSDLL";
+                string subject = "[SW Alert]: PushSPCToFITs service cannot run GetSPCRequestParams";
                 SendEmail.SendNotification(body.ToString(), subject);
 
                 Log.Error($"Class-- >{this.GetType().Name} Method-->{System.Reflection.MethodBase.GetCurrentMethod().Name}   Error-->{e.Message}");
             }
-            return true;
+            return requestParams;
+        }
+
+        public bool InsertSPCToFITs (clsDB objFITs, FITsRequestParams requestParams)
+        {
+            bool result = false;
+            try
+            {                
+                Log.Information($"labelParams: {requestParams.labelParams}");
+                Log.Information($"labelResults: {requestParams.resultParams}");
+                ServiceResult objResult = objFITs.fn_Insert(requestParams.operationType, requestParams.modelType, requestParams.operation, requestParams.labelParams, requestParams.resultParams, requestParams.fsp, requestParams.employeeNo, requestParams.shift, requestParams.machine, requestParams.timeTestFITs, requestParams.revision);
+                result = objResult.outputValue;
+                Log.Information($"The FITs fn_Insert result is {objResult.result}, messge is {objResult.message}, outputValue is {objResult.outputValue.ToString()} ");
+                
+            }
+            catch (Exception e)
+            {
+                StringBuilder body = new StringBuilder();
+                body.AppendLine().Append("\n\nThe PushSPCToFITs service cannot run fn_Insert using FITSDLL");
+                body.AppendLine().Append("\n\nRefer to error message: " + e.Message);
+                string subject = "[SW Alert]: PushSPCToFITs service cannot run fn_Insert using FITSDLL";
+                SendEmail.SendNotification(body.ToString(), subject);
+
+                Log.Error($"Class-- >{this.GetType().Name} Method-->{System.Reflection.MethodBase.GetCurrentMethod().Name}   Error-->{e.Message}");
+            }
+            return result;
         }
     }
 }

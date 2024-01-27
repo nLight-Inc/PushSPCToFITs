@@ -22,9 +22,8 @@ namespace Test
             Console.WriteLine("\nSPC Data Loading Starts:");
 
             ProductionTask SPCTask = ProductionTask.Instance;
-            SPCTask.TestFITs();
-            //FITSDLL.clsDB objFITS = SPCTask.TestFITs();
-            //SPCTask.RunTask();
+            //SPCTask.TestFITs();
+            SPCTask.RunTask();
         }
     }
 }

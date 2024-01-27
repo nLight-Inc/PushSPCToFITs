@@ -32,5 +32,8 @@ namespace PushSPCToFITs.Models
         public DateTime? ProcessToFITs_date { get; set; }
         public string? ProcessToFITs_user { get; set; }
 
+        public string? Tracking_number { get; set; }
+        public bool? FITsNeed_flag { get; set; }
+
     }
 }

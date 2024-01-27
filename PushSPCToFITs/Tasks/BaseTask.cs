@@ -54,7 +54,6 @@ namespace PushSPCToFITs.Tasks
         private TimeSpan timespand = new TimeSpan();
         private double _timespanSec = 0;
         private double _timespanSecd = 0;
-        private bool _updateDataSuccessFlag = false;
         #endregion
 
         #region Methods
@@ -73,33 +72,40 @@ namespace PushSPCToFITs.Tasks
                     SetTaskSpecificDefaults();
 
                     ICollection<SPCHeader> SPCHeader =  GetSPCHeader(); //Get top _SPCHeaderID_topN_ToProcess pending SPC Header using LIFO method
-
+                    RunFITsDLL rfd = new RunFITsDLL();
+                    FITSDLL.clsDB objFITs = rfd.GetFITsConnection();
+                    FITsRequestParams requestParams = new FITsRequestParams();
                     if (SPCHeader.Count > 0 )
                     {
                         foreach (SPCHeader s in SPCHeader)
                         {
                             sw.Start();
                             ICollection<GetPendingData> pendingData = GetPendingData(s.ID); //Get SPC content from dbo.vwSPCData by feedbing SPC Header ID
-
-                            clsDB objFITs = GetFITsConnection();
+                            
                             bool FITsNeed_flag = CheckFITsNeed(pendingData);
+                            string[] splitResultParams;
                             if (FITsNeed_flag)
                             {
-                                InsertFITs(pendingData, objFITs);
+                                requestParams = rfd.GetSPCRequestParams(objFITs, pendingData);
+                                splitResultParams = requestParams.resultParams.ToString().Split(',');
+
+                                if (rfd.InsertSPCToFITs(objFITs, requestParams))
+                                {
+                                    UpdateSPCHeader(s, true, splitResultParams[splitResultParams.Length - 1], true) ;
+                                }
+                                else
+                                {
+                                    UpdateSPCHeader(s, false, splitResultParams[splitResultParams.Length - 1], true);
+                                }
+                            }
+                            else
+                            {
+                                UpdateSPCHeader(s, false, null, false);
                             }
                             
-                            //foreach (GetPendingData p in PendingData)
-                            //{
-                            //    swd.Start();
-                            //    ProcessSPCDataToFITs(p);
-                            //    //_updateDataSuccessFlag = UpdateSPCData(p);
-                            //    swd.Stop();
-                            //}
-
-                            if (_updateDataSuccessFlag)
-                            {
-                                UpdateSPCHeader(s);
-                            }
+                            
+                            
+                            
                             sw.Stop();
                         }
 
@@ -127,11 +133,6 @@ namespace PushSPCToFITs.Tasks
         {
             _backTracking = Common.ReadAppSetting("BackTracking", _backTracking);
             _sleepSeconds = Common.ReadAppSetting("SleepSeconds", _sleepSeconds);
-        }
-
-        protected void ProcessSPCDataToFITs(GetPendingData pendingData)
-        {
-
         }
 
         protected ICollection<SPCHeader> GetSPCHeader()
@@ -178,7 +179,7 @@ namespace PushSPCToFITs.Tasks
             return toProcess;
         }
 
-        protected void UpdateSPCHeader(SPCHeader sh)
+        protected void UpdateSPCHeader(SPCHeader sh, bool processedSuccessToFITs_flag, string trackingNumber, bool fitsNeed_flag)
         {
             try
             {
@@ -190,14 +191,22 @@ namespace PushSPCToFITs.Tasks
                         .FirstOrDefault();
 
 
-                    sph.ProcessedSuccessToFITs_flag = true;
+                    
                     sph.ProcessToFITs_date = DateTime.Now;
                     sph.ProcessToFITs_user = userName;
 
-                    timespan = sw.Elapsed;
-                    _timespanSec = timespan.TotalSeconds;
-                    sph.Process_time = _timespanSec;
+                    if (fitsNeed_flag)
+                    {
+                        sph.ProcessedSuccessToFITs_flag = processedSuccessToFITs_flag;
+                        sph.Tracking_number = trackingNumber;
+
+                        timespan = sw.Elapsed;
+                        _timespanSec = timespan.TotalSeconds;
+                        sph.Process_time = _timespanSec;
+                    }
                     
+                    sph.FITsNeed_flag = fitsNeed_flag;
+
                     nEQdbContext.SaveChanges();
 
                 }
@@ -313,47 +322,7 @@ namespace PushSPCToFITs.Tasks
 
         }
 
-        /// <summary>
-        /// Get FITs object through FITSDLL fn_Logon function
-        /// </summary>
-        /// <returns></returns>
-        protected clsDB GetFITsConnection()
-        {
-            Log.Information($"The FITsConnection function starts. ");
-            FITSDLL.clsDB objFITS = new clsDB();
 
-            string dbFITSName = "dbNlight";
-            string userName = "nLight";
-            string password = "n@AAz87ber";
-
-            ServiceResult LogonResult = objFITS.Logon(dbFITSName, userName, password);
-
-            try
-            {
-                if (LogonResult.result == 1)
-                {
-                    Log.Information($"The FITs Logon succeeded, result is {LogonResult.result}, message is {LogonResult.message}, outputValue is {LogonResult.outputValue.ToString()} ");
-                }
-                else
-                {
-                    Log.Error($"The FITs Logon Logon failed, result is {LogonResult.result}, message is {LogonResult.message}, outputValue is {LogonResult.outputValue.ToString()} ");
-                }
-            }
-            catch (Exception e)
-            {
-                _stopService = true;
-
-                StringBuilder body = new StringBuilder();
-                body.AppendLine().Append("\n\nThe PushSPCToFITs service has been stopped");
-                body.AppendLine().Append("\n\nRefer to error message: " + e.Message);
-                string subject = "PushSPCToFITs service stopped";
-                SendEmail.SendNotification(body.ToString(), subject);
-
-                Log.Error($"Class-- >{this.GetType().Name} Method-->{System.Reflection.MethodBase.GetCurrentMethod().Name}   Error-->{e.Message}");
-            }
-
-            return objFITS;
-        }
 
         /// <summary>
         /// Check if the SPC data is needed to push to FITs since charts "element fac" and "element sac dev from target" do not exist in FITs 
@@ -374,110 +343,6 @@ namespace PushSPCToFITs.Tasks
             return FITsNeed;
         }
        
-        protected void InsertFITs(ICollection<GetPendingData> pendingData, clsDB objFITS)
-        {
-            int operationType = 0;
-            string modelType = string.Empty;
-            string operation = string.Empty;
-            GetPendingData gdf = pendingData.First();
-            string serialNumber = gdf.SerialNumber;
-            string labelParams = "Tracking number,Golden Sample SN,Golden Count time,SC Part number,FAC Station#,FAC Beam Width,FAC Pointing,Comment,Result,Failure code";
-            string SCPartNumber = gdf.ChartName;
-            string revision = "";
-            string fsp = ",";
-            string employeeNo = "000001";
-            string shift = "";
-            string machine = gdf.Process;
-            DateTime timeTest = Convert.ToDateTime(gdf.tmTest);
-            string timestampStr = timeTest.ToString("yyyy-MM-dd hh:mm:ss");
-            DateTime timeTestFITs = DateTime.ParseExact(timestampStr, "yyyy-MM-dd hh:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
-            string comment = "Test";
-            string result = "NA";
-            string failureCode = "0";
-
-            //For SPC12:
-            string FBNWO = gdf.WorkOrder;
-            string supercarrier = string.Empty;
-
-            //For SPC11:
-            string GoldenCountTime = "1";            
-            float FACBeanWidth;
-            float FACPointing;
-
-            //For SPC16
-            
-            switch (gdf.ChartName)
-            {
-                case "element fac dev from target": 
-                    modelType = "SPC for Element"; 
-                    operation = "SPC12"; 
-                    break;
-                case "element fac golden sample":
-                    modelType = "SPC for Element";
-                    operation = "SPC11";
-                    
-                    
-                    break;
-                case "element mirror golden sample":
-                    modelType = "SPC for Element";
-                    operation = "SPC16";
-                    break;
-                case "element mt golden sample":
-                    modelType = "SPC for Element";
-                    operation = "SPC17";
-                    break;
-                case "element sac":
-                    modelType = "SPC for Element";
-                    operation = "SPC14";
-                    break;
-                case "element sac golden sample":
-                    modelType = "SPC for Element";
-                    operation = "SPC13";
-                    break;
-                case "se golden sample":                    
-                    if(gdf.PartGroup == "GS CS") //for PartGroup=GS CS
-                    {
-                        modelType = "SPC for Element";
-                        operation = "SPC15"; 
-                    }
-                    else //for PartGroup=GS Pearl Chiplet
-                    {
-                        modelType = "SPC for Pearl";
-                        operation = "SPCP04"; 
-                    }                    
-                    break;
-            }
-
-            foreach (GetPendingData gd in pendingData)
-            {
-                
-            }
-            
-
-
-            try
-            {
-                
-                ServiceResult objResult = objFITS.fn_Handshake(modelType, operation, serialNumber);
-                Log.Information($"The FITs fn_Handshake result is {objResult.result}, messge is {objResult.message}, outputValue is {objResult.outputValue.ToString()} ");
-
-                string[] splitHandshakeMessage = objResult.message.ToString().Split(' ');
-                string trackingNumber = splitHandshakeMessage[splitHandshakeMessage.Length - 1];
-                string labelResults2 = trackingNumber + ",T59CHU,1,GS element FAC,FAC No.5,1.640064,272.04,Test,PASS,0";
-
-                Log.Information($"labelParams: {labelParams}");
-                Log.Information($"labelResults: {labelResults2}");
-                objResult = objFITS.fn_Insert(operationType, modelType, operation, labelParams, labelResults2, fsp, employeeNo, shift, machine, timeTestFITs, revision);
-                Log.Information($"The FITs fn_Insert with Tracking number result is {objResult.result}, messge is {objResult.message}, outputValue is {objResult.outputValue.ToString()} ");
-
-
-            }
-            catch (Exception e)
-            {
-                Log.Error($"Class-- >{this.GetType().Name} Method-->{System.Reflection.MethodBase.GetCurrentMethod().Name}   Error-->{e.Message}");
-            }
-
-        }
         #endregion
 
     }
