@@ -14,10 +14,6 @@ namespace PushSPCToFITs.Models
         public int SPCChartID { get; set; }
         public string ParameterName { get; set; }
         public double? ParameterValue { get; set; }
-        public bool? ProcessedSuccessToFITs_flag { get; set; }
-        public DateTime? ProcessToFITs_date { get; set; }
-        public string? ProcessToFITs_user { get; set; }
-        public double? Process_time { get; set; }
 
     }
 }

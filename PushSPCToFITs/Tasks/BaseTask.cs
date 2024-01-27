@@ -192,17 +192,18 @@ namespace PushSPCToFITs.Tasks
 
 
                     
-                    sph.ProcessToFITs_date = DateTime.Now;
-                    sph.ProcessToFITs_user = userName;
+                    
 
                     if (fitsNeed_flag)
                     {
-                        sph.ProcessedSuccessToFITs_flag = processedSuccessToFITs_flag;
-                        sph.Tracking_number = trackingNumber;
-
                         timespan = sw.Elapsed;
                         _timespanSec = timespan.TotalSeconds;
                         sph.Process_time = _timespanSec;
+
+                        sph.ProcessedSuccessToFITs_flag = processedSuccessToFITs_flag;
+                        sph.ProcessToFITs_date = DateTime.Now;
+                        sph.ProcessToFITs_user = userName;
+                        sph.Tracking_number = trackingNumber;
                     }
                     
                     sph.FITsNeed_flag = fitsNeed_flag;
@@ -217,42 +218,7 @@ namespace PushSPCToFITs.Tasks
             }
         }
 
-        protected bool UpdateSPCData(GetPendingData p)
-        {
-            try
-            {
-                using (NEQdbContext nEQdbContext = new NEQdbContext())
-                {
-                    SPCData spd = nEQdbContext.SPCData
-                        .Where(sd => sd.ID == p.ID && (sd.ProcessedSuccessToFITs_flag != true || sd.ProcessedSuccessToFITs_flag == null))
-                        .FirstOrDefault();
-
-                    if (spd != null)
-                    {
-                        spd.ProcessedSuccessToFITs_flag = true;
-                        spd.ProcessToFITs_date = DateTime.Now;
-                        spd.ProcessToFITs_user = userName;
-
-                        timespand = swd.Elapsed;
-                        _timespanSecd = timespand.TotalSeconds;
-                        spd.Process_time = _timespanSecd;
-
-                        nEQdbContext.SaveChanges();
-                    }
-                    
-                }
-
-                Log.Information($"Completed UpdateSPCData(GetPendingData p) to update specific SPCData row. ID = {p.ID}");
-                return true;
-            }
-            catch (Exception e)
-            {
-                Log.Error($"Class-- >{this.GetType().Name} Method-->{System.Reflection.MethodBase.GetCurrentMethod().Name}   Error-->{e.Message}");
-                return false;
-            }
-
-
-        }
+     
 
         /// <summary>
         /// This function is used for FITs testing with hard coded data
