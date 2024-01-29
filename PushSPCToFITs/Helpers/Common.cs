@@ -54,7 +54,7 @@ namespace PushSPCToFITs.Helpers
                     neqConnString = "server=FBR-SQL04-DEV;database=NEQDB;trusted_connection=true; ConnectRetryCount=5; ConnectRetryInterval=15";
                     break;
                 case "fa":
-                    neqConnString = "server=FBR-SQL04-SVR;database=NEQDB;trusted_connection=true; ConnectRetryCount=5; ConnectRetryInterval=15";
+                    neqConnString = "server=FBR-SQL12-SVR;database=NEQDBTEST;trusted_connection=true; ConnectRetryCount=5; ConnectRetryInterval=15";
                     break;
                 default:
                     neqConnString = "server=NLI-SQL04-SVR;database=NEQDB;trusted_connection=true; ConnectRetryCount=5; ConnectRetryInterval=15";

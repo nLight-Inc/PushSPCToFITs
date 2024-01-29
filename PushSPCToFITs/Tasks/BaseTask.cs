@@ -16,7 +16,7 @@ using FITSDLL;
 
 namespace PushSPCToFITs.Tasks
 {
-    public class BaseTask<Tclass> where Tclass :  class
+    public class BaseTask<Tclass> where Tclass : class
     {
         #region Singleton
 
@@ -63,25 +63,25 @@ namespace PushSPCToFITs.Tasks
 
             System.Security.Principal.WindowsIdentity currentUser = System.Security.Principal.WindowsIdentity.GetCurrent();
             userName = currentUser.Name.ToString().Split('\\')[1] + "@nlight.net";
-            
+
             do
             {
                 StartLogging.StartLogger();
                 try
-                {                    
+                {
                     SetTaskSpecificDefaults();
 
-                    ICollection<SPCHeader> SPCHeader =  GetSPCHeader(); //Get top _SPCHeaderID_topN_ToProcess pending SPC Header using LIFO method
+                    ICollection<SPCHeader> SPCHeader = GetSPCHeader(); //Get top _SPCHeaderID_topN_ToProcess pending SPC Header using LIFO method
                     RunFITsDLL rfd = new RunFITsDLL();
                     FITSDLL.clsDB objFITs = rfd.GetFITsConnection();
                     FITsRequestParams requestParams = new FITsRequestParams();
-                    if (SPCHeader.Count > 0 )
+                    if (SPCHeader.Count > 0)
                     {
                         foreach (SPCHeader s in SPCHeader)
                         {
                             sw.Start();
                             ICollection<GetPendingData> pendingData = GetPendingData(s.ID); //Get SPC content from dbo.vwSPCData by feedbing SPC Header ID
-                            
+
                             bool FITsNeed_flag = CheckFITsNeed(pendingData);
                             string[] splitResultParams;
                             if (FITsNeed_flag)
@@ -91,21 +91,22 @@ namespace PushSPCToFITs.Tasks
 
                                 if (rfd.InsertSPCToFITs(objFITs, requestParams))
                                 {
-                                    UpdateSPCHeader(s, true, splitResultParams[splitResultParams.Length - 1], true) ;
+                                    UpdateSPCHeader(s, true, splitResultParams[0], true);
                                 }
                                 else
                                 {
-                                    UpdateSPCHeader(s, false, splitResultParams[splitResultParams.Length - 1], true);
+                                    UpdateSPCHeader(s, false, splitResultParams[0], true);
                                 }
                             }
                             else
                             {
+                                Log.Information($"FITs does not need SPCHeaderID {s.ID} ");
                                 UpdateSPCHeader(s, false, null, false);
                             }
-                            
-                            
-                            
-                            
+
+
+
+
                             sw.Stop();
                         }
 
@@ -119,7 +120,7 @@ namespace PushSPCToFITs.Tasks
 
                     StringBuilder body = new StringBuilder();
                     body.AppendLine().Append("\n\nThe PushSPCToFITs service has been stopped");
-                    body.AppendLine().Append("\n\nRefer to error message: " + e.Message);                    
+                    body.AppendLine().Append("\n\nRefer to error message: " + e.Message);
                     string subject = "PushSPCToFITs service stopped";
                     SendEmail.SendNotification(body.ToString(), subject);
 
@@ -143,23 +144,23 @@ namespace PushSPCToFITs.Tasks
             using (NEQdbContext nEQdbContext = new NEQdbContext())
             {
                 toProcess = nEQdbContext.SPCHeader
-                    .Where(sh => sh.ProcessedSuccessToFITs_flag != true || sh.ProcessedSuccessToFITs_flag == null)
+                    .Where(sh => (sh.FITsNeed_flag == true || sh.FITsNeed_flag == null) && (sh.ProcessedSuccessToFITs_flag != true || sh.ProcessedSuccessToFITs_flag == null))
                     .OrderByDescending(sh => sh.ID)
                     .Take(_SPCHeaderID_topN_ToProcess)
                     .ToList();
             }
 
-            Log.Information($"Completed GetSPCHeader() to get pending top SPCHeaderID. Qty = {toProcess.Count}");
+            Log.Information($"Completed GetSPCHeader() to get pending top {toProcess.Count} SPCHeaderIDs");
             return toProcess;
 
-            
+
         }
         protected ICollection<GetPendingData> GetPendingData(int SPCHeaderID)
         {
             ICollection<GetPendingData> toProcess = new List<GetPendingData>();
             try
             {
-                
+
 
                 using (NEQdbContext nEQdbContext = new NEQdbContext())
                 {
@@ -168,8 +169,8 @@ namespace PushSPCToFITs.Tasks
                         .ToList();
                 }
 
-                Log.Information($"Completed GetPendingData(int SPCHeaderID) to get pending SPC data. Qty = {toProcess.Count}");
-                
+                Log.Information($"Completed GetPendingData to get pending SPCHeaderID = {SPCHeaderID}, data Qty = {toProcess.Count}");
+
             }
             catch (Exception e)
             {
@@ -185,14 +186,14 @@ namespace PushSPCToFITs.Tasks
             {
                 using (NEQdbContext nEQdbContext = new NEQdbContext())
                 {
-                    
+
                     SPCHeader sph = nEQdbContext.SPCHeader
                         .Where(spch => spch.ID == sh.ID)
                         .FirstOrDefault();
 
 
-                    
-                    
+
+
 
                     if (fitsNeed_flag)
                     {
@@ -205,7 +206,7 @@ namespace PushSPCToFITs.Tasks
                         sph.ProcessToFITs_user = userName;
                         sph.Tracking_number = trackingNumber;
                     }
-                    
+
                     sph.FITsNeed_flag = fitsNeed_flag;
 
                     nEQdbContext.SaveChanges();
@@ -218,7 +219,7 @@ namespace PushSPCToFITs.Tasks
             }
         }
 
-     
+
 
         /// <summary>
         /// This function is used for FITs testing with hard coded data
@@ -255,13 +256,13 @@ namespace PushSPCToFITs.Tasks
 
             DateTime timestamp2 = Convert.ToDateTime("12/21/2023  6:58:00 AM");
             string timestampStr = timestamp2.ToString("yyyy-MM-dd hh:mm:ss");
-            DateTime timestamp = DateTime.ParseExact(timestampStr, "yyyy-MM-dd hh:mm:ss", System.Globalization.CultureInfo.InvariantCulture );
+            DateTime timestamp = DateTime.ParseExact(timestampStr, "yyyy-MM-dd hh:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
 
 
             try
-            { 
+            {
                 ServiceResult LogonResult = objFITS.Logon(dbFITSName, userName, password);
-                Log.Information ($"The FITs Logon result is {LogonResult.result}, message is {LogonResult.message}, outputValue is {LogonResult.outputValue.ToString()} ");
+                Log.Information($"The FITs Logon result is {LogonResult.result}, message is {LogonResult.message}, outputValue is {LogonResult.outputValue.ToString()} ");
 
                 ServiceResultQuery objResultQuery = objFITS.fn_Query(modelTypeQuery, operationQuery, revisionQuery, serialNumberQuery, labelParamsQuery, fspQuery);
                 Log.Information($"The FITs fn_Query result is {objResultQuery.result}, messge is {objResultQuery.message}, outputValue is {objResultQuery.outputValue.ToString()} ");
@@ -278,7 +279,7 @@ namespace PushSPCToFITs.Tasks
                 objResult = objFITS.fn_Insert(operationType, modelType, operation, labelParams2, labelResults2, fsp, employeeNo, shift, machine, timestamp, revision);
                 Log.Information($"The FITs fn_Insert with Tracking number result is {objResult.result}, messge is {objResult.message}, outputValue is {objResult.outputValue.ToString()} ");
 
-               
+
             }
             catch (Exception e)
             {
@@ -303,12 +304,12 @@ namespace PushSPCToFITs.Tasks
             {
                 case "element fac": FITsNeed = false; break;
                 case "element sac dev from target": FITsNeed = false; break;
-                default: FITsNeed = true;  break;
+                default: FITsNeed = true; break;
             }
 
             return FITsNeed;
         }
-       
+
         #endregion
 
     }
