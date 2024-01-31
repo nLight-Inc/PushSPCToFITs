@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using FITSDLL;
+using System.Text;
 
 
 namespace Test
@@ -24,6 +25,16 @@ namespace Test
             ProductionTask SPCTask = ProductionTask.Instance;
             //SPCTask.TestFITs();
             SPCTask.RunTask();
+            //Test_SendEmail();
+        }
+
+        static void Test_SendEmail()
+        {
+
+            StringBuilder body = new StringBuilder();
+            body.AppendLine().Append("\n\nTest");            
+            string subject = "[SW Alert]: This is test mail, please ignore it";
+            SendEmail.SendNotification(body.ToString(), subject);
         }
     }
 }

@@ -92,4 +92,3 @@ D:\2.Code\Github\nLight-Inc\PushSPCToFITs\PushSPCToFITs\obj\Debug\PushSPCToFITs.
 D:\2.Code\Github\nLight-Inc\PushSPCToFITs\PushSPCToFITs\obj\Debug\PushSPCToFITs.csproj.CopyComplete
 D:\2.Code\Github\nLight-Inc\PushSPCToFITs\PushSPCToFITs\obj\Debug\PushSPCToFITs.dll
 D:\2.Code\Github\nLight-Inc\PushSPCToFITs\PushSPCToFITs\obj\Debug\PushSPCToFITs.pdb
-D:\2.Code\Github\nLight-Inc\PushSPCToFITs\PushSPCToFITs\obj\Debug\PushSPCToFITs.csproj.AssemblyReference.cache

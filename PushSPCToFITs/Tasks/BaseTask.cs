@@ -92,16 +92,19 @@ namespace PushSPCToFITs.Tasks
                                 if (rfd.InsertSPCToFITs(objFITs, requestParams))
                                 {
                                     UpdateSPCHeader(s, true, splitResultParams[0], true);
+                                    Log.Information($"FITs inserted successfully for SPCHeaderID {s.ID} , SerialNumber {s.SerialNumber} ");
                                 }
                                 else
                                 {
                                     UpdateSPCHeader(s, false, splitResultParams[0], true);
+                                    Log.Information($"FITs inserted unsuccessfully for need SPCHeaderID {s.ID} , SerialNumber {s.SerialNumber} ");
                                 }
                             }
                             else
                             {
-                                Log.Information($"FITs does not need SPCHeaderID {s.ID} ");
+                                
                                 UpdateSPCHeader(s, false, null, false);
+                                Log.Information($"FITs does not need for SPCHeaderID {s.ID} , SerialNumber {s.SerialNumber} ");
                             }
 
 

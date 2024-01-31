@@ -104,7 +104,7 @@ namespace PushSPCToFITs.Helpers
                 requestParams.operationType = 0;
                 requestParams.revision = "";
                 requestParams.fsp = ",";
-                requestParams.employeeNo = "000001"; //To be replaced by real 6 digital number recognized by FITs
+                requestParams.employeeNo = gdf.Employee; // "000001"; //To be replaced by real 6 digital number recognized by FITs
                 requestParams.shift = "";
                 requestParams.machine = gdf.Process;
                 DateTime timeTest = Convert.ToDateTime(gdf.tmTest);

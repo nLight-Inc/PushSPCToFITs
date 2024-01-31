@@ -18,7 +18,7 @@ namespace PushSPCToFITs.Helpers
             try
             {
                 MailAddress from = new MailAddress("CIMAlerts@nlight.net");
-                MailAddress to = new MailAddress("sha_itswalter@nlight.net");
+                MailAddress to = new MailAddress("sha_itswalerts@nlight.net");
                 
                 using (MailMessage mail = new MailMessage(from, to))
                 {
