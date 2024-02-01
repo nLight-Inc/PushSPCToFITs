@@ -54,6 +54,13 @@ namespace PushSPCToFITs.Helpers
             return objFITS;
         }
 
+        /// <summary>
+        /// Get Tracking number for FITSDLL fn_Insert execution
+        /// </summary>
+        /// <param name="objFITs">FITs object</param>
+        /// <param name="requestParams">FITs request parameters</param>
+        /// <param name="resultParams">FITs result parameters of requst parameters to be pushed into FITs</param>
+        /// <returns></returns>
         public string GetTrackingNumber(clsDB objFITs, FITsRequestParams requestParams, FITsResultParams resultParams )
         {
             string serialNumber =  string.Empty;
@@ -92,6 +99,12 @@ namespace PushSPCToFITs.Helpers
             return trackingNumber;
         }
 
+        /// <summary>
+        /// Compose FITs requestParams using FITs object and pending SPC data of a specific test
+        /// </summary>
+        /// <param name="objFITs">FITs object</param>
+        /// <param name="pendingData">pending SPC data of a specific test</param>
+        /// <returns></returns>
         public FITsRequestParams GetSPCRequestParams (clsDB objFITs, ICollection<GetPendingData> pendingData)
         {
             FITsRequestParams requestParams = new FITsRequestParams();
@@ -105,8 +118,12 @@ namespace PushSPCToFITs.Helpers
                 requestParams.revision = "";
                 requestParams.fsp = ",";
                 requestParams.employeeNo = gdf.Employee; // "000001"; //To be replaced by real 6 digital number recognized by FITs
-                requestParams.shift = "";
-                requestParams.machine = gdf.Process;
+                requestParams.shift = "";  
+                //Remove "_TE" characters from station name
+                string stationName = DecryptStationName(gdf.Process);
+                requestParams.machine = stationName;
+
+                //Format test date into FITs standardard yyyy-MM-dd hh:mm:ss
                 DateTime timeTest = Convert.ToDateTime(gdf.tmTest);
                 string timestampStr = timeTest.ToString("yyyy-MM-dd hh:mm:ss");
                 requestParams.timeTestFITs = DateTime.ParseExact(timestampStr, "yyyy-MM-dd hh:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
@@ -178,7 +195,7 @@ namespace PushSPCToFITs.Helpers
                         requestParams.modelType = "SPC for Element";
                         requestParams.operation = "SPC11";
                         resultParams.goldenSampleSN = gdf.SerialNumber;
-                        resultParams.facStationNumber = gdf.Process;
+                        resultParams.facStationNumber = stationName;
 
                         requestParams.resultParams = resultParams.goldenSampleSN + "," + resultParams.facStationNumber + "," + Convert.ToString(resultParams.facBeamWidth) + "," + Convert.ToString(resultParams.facPointing);
                         break;
@@ -189,18 +206,18 @@ namespace PushSPCToFITs.Helpers
                         resultParams.fbnWO = gdf.WorkOrder;
                         resultParams.supercarrierSN = gdf.SerialNumber;
                         resultParams.scPartNumber = gdf.Part;
-                        resultParams.facStationNumber = gdf.Process;
+                        resultParams.facStationNumber = stationName;
 
-                        requestParams.resultParams = resultParams.fbnWO + "," + resultParams.supercarrierSN + "," + resultParams.scPartNumber + Convert.ToString(resultParams.facBeamWidth) + "," + Convert.ToString(resultParams.facPointing);
+                        requestParams.resultParams = resultParams.fbnWO + "," + resultParams.supercarrierSN + "," + resultParams.scPartNumber + "," + resultParams.facStationNumber + "," + Convert.ToString(resultParams.facBeamWidth) + "," + Convert.ToString(resultParams.facPointing);
                         break;
                     case "element sac golden sample":
                         requestParams.labelParams = "Tracking number,Golden Sample SN,SAC station#,FAC Beam Width,FAC Pointing,SAC Beam Width,SAC Power";
                         requestParams.modelType = "SPC for Element";
                         requestParams.operation = "SPC13";
                         resultParams.goldenSampleSN = gdf.SerialNumber;
-                        resultParams.sacStationNumber = gdf.Process;
+                        resultParams.sacStationNumber = stationName;
 
-                        requestParams.resultParams = resultParams.goldenSampleSN + "," + resultParams.sacStationNumber + "," + Convert.ToString(resultParams.facBeamWidth) + Convert.ToString(resultParams.facPointing) + "," + Convert.ToString(resultParams.sacBeamWidth) + "," + Convert.ToString(resultParams.sacPower);
+                        requestParams.resultParams = resultParams.goldenSampleSN + "," + resultParams.sacStationNumber + "," + Convert.ToString(resultParams.facBeamWidth) + "," + Convert.ToString(resultParams.facPointing) + "," + Convert.ToString(resultParams.sacBeamWidth) + "," + Convert.ToString(resultParams.sacPower);
                         break;
                     case "element sac":
                         requestParams.labelParams = "Tracking number,FBN W/O,Supercarrier SN,SC Part number,SAC Station#,SAC Beam Width,SAC Pointing,SAC Power";
@@ -208,16 +225,16 @@ namespace PushSPCToFITs.Helpers
                         requestParams.operation = "SPC14";
                         resultParams.supercarrierSN = gdf.SerialNumber;
                         resultParams.scPartNumber = gdf.Part;
-                        resultParams.sacStationNumber = gdf.Process;
+                        resultParams.sacStationNumber = stationName;
 
-                        requestParams.resultParams = resultParams.fbnWO + "," + resultParams.supercarrierSN + "," + resultParams.scPartNumber + Convert.ToString(resultParams.sacBeamWidth) + "," + Convert.ToString(resultParams.sacPointing) + "," + Convert.ToString(resultParams.sacPower);
+                        requestParams.resultParams = resultParams.fbnWO + "," + resultParams.supercarrierSN + "," + resultParams.scPartNumber + "," + resultParams.sacStationNumber + "," + Convert.ToString(resultParams.sacBeamWidth) + "," + Convert.ToString(resultParams.sacPointing) + "," + Convert.ToString(resultParams.sacPower);
                         break;
                     case "element mirror golden sample":
                         requestParams.labelParams = "Tracking number,Golden Sample SN,Mirror Station#,Power";
                         requestParams.modelType = "SPC for Element";
                         requestParams.operation = "SPC16";
                         resultParams.goldenSampleSN = gdf.SerialNumber;
-                        resultParams.mirrorStationNumber = gdf.Process;
+                        resultParams.mirrorStationNumber = stationName;
 
                         requestParams.resultParams = resultParams.goldenSampleSN + "," + resultParams.mirrorStationNumber + "," + Convert.ToString(resultParams.power);
                         break;
@@ -226,7 +243,7 @@ namespace PushSPCToFITs.Helpers
                         requestParams.modelType = "SPC for Element";
                         requestParams.operation = "SPC17";
                         resultParams.goldenSampleSN = gdf.SerialNumber;
-                        resultParams.mtStationNumber = gdf.Process;
+                        resultParams.mtStationNumber = stationName;
 
                         requestParams.resultParams = resultParams.goldenSampleSN + "," + resultParams.mtStationNumber + "," + Convert.ToString(resultParams.voltage) + "," + Convert.ToString(resultParams.power) + "," + Convert.ToString(resultParams.waveCentroid) + "," + Convert.ToString(resultParams.snoutTemperature);
                         break;
@@ -234,7 +251,7 @@ namespace PushSPCToFITs.Helpers
                         requestParams.labelParams = "Tracking number,Golden Sample SN,SE Station#,Power,Wavelength";
 
                         resultParams.goldenSampleSN = gdf.SerialNumber;
-                        resultParams.seStationNumber = gdf.Process;
+                        resultParams.seStationNumber = stationName;
                         if (gdf.PartGroup == "GS CS") //for PartGroup=GS CS
                         {
                             requestParams.modelType = "SPC for Element";
@@ -265,6 +282,12 @@ namespace PushSPCToFITs.Helpers
             return requestParams;
         }
 
+        /// <summary>
+        /// Insert the SPC data into FITs
+        /// </summary>
+        /// <param name="objFITs">FITs object</param>
+        /// <param name="requestParams">Input requstParams to be pushed into FITs</param>
+        /// <returns></returns>
         public bool InsertSPCToFITs (clsDB objFITs, FITsRequestParams requestParams)
         {
             bool result = false;
@@ -288,6 +311,23 @@ namespace PushSPCToFITs.Helpers
                 Log.Error($"Class-- >{this.GetType().Name} Method-->{System.Reflection.MethodBase.GetCurrentMethod().Name}   Error-->{e.Message}");
             }
             return result;
+        }
+
+        /// <summary>
+        /// Remove "_TE" characters from station name as business does not needed it, Rebecca Jin confirmed it
+        /// </summary>
+        /// <param name="spcStationName"></param>
+        /// <returns></returns>
+        public string DecryptStationName(string spcStationName)
+        {
+            string stationName = string.Empty;
+
+            if (spcStationName.Substring(spcStationName.Length-3) == "_TE")
+            {
+                stationName = spcStationName.Substring(0, spcStationName.Length - 3);
+            }
+
+            return stationName;
         }
     }
 }

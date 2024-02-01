@@ -57,6 +57,9 @@ namespace PushSPCToFITs.Tasks
         #endregion
 
         #region Methods
+        /// <summary>
+        /// Execute the overall data flow to insert SPC data into FITs, then update insert result in NEQdb 
+        /// </summary>
         public void RunTask()
         {
             this.SetTaskSpecificDefaults();
@@ -139,6 +142,10 @@ namespace PushSPCToFITs.Tasks
             _sleepSeconds = Common.ReadAppSetting("SleepSeconds", _sleepSeconds);
         }
 
+        /// <summary>
+        /// Get top _SPCHeaderID_topN_ToProcess pending SPCHeader list
+        /// </summary>
+        /// <returns></returns>
         protected ICollection<SPCHeader> GetSPCHeader()
         {
 
@@ -158,6 +165,12 @@ namespace PushSPCToFITs.Tasks
 
 
         }
+
+        /// <summary>
+        /// Get SPC Data details for specific SPCHeaderID
+        /// </summary>
+        /// <param name="SPCHeaderID"></param>
+        /// <returns></returns>
         protected ICollection<GetPendingData> GetPendingData(int SPCHeaderID)
         {
             ICollection<GetPendingData> toProcess = new List<GetPendingData>();
@@ -183,6 +196,13 @@ namespace PushSPCToFITs.Tasks
             return toProcess;
         }
 
+        /// <summary>
+        /// Update FITs insert result in NEQdb SPCHeader table
+        /// </summary>
+        /// <param name="sh">Position SPCHeader row</param>
+        /// <param name="processedSuccessToFITs_flag">FITs fn_Insert success/failure</param>
+        /// <param name="trackingNumber">FITs tracking number to position the data in FITs</param>
+        /// <param name="fitsNeed_flag">Identify the SPC data is needed by FITs or not</param>
         protected void UpdateSPCHeader(SPCHeader sh, bool processedSuccessToFITs_flag, string trackingNumber, bool fitsNeed_flag)
         {
             try
@@ -252,9 +272,11 @@ namespace PushSPCToFITs.Tasks
             string labelParams2 = "Tracking number,Golden Sample SN,FAC Station#,FAC Beam Width,FAC Pointing";
             string revision = "";
             string fsp = ",";
-            string employeeNo = "000001";
+            //string employeeNo = "000001";
+            string employeeNo = "Auto upload";
             string shift = "";
-            string machine = "FAC No.5";
+            //string machine = "FAC No.5";
+            string machine = "element FAC 5";
 
 
             DateTime timestamp2 = Convert.ToDateTime("12/21/2023  6:58:00 AM");
@@ -275,8 +297,10 @@ namespace PushSPCToFITs.Tasks
 
                 string[] splitHandshakeMessage = objResult.message.ToString().Split(' ');
                 string trackingNumber = splitHandshakeMessage[splitHandshakeMessage.Length - 1];
-                string labelResults2 = trackingNumber + ",T59CHU,FAC No.5,1.640064,286.7";
+                //string labelResults2 = trackingNumber + ",T59CHU,FAC No.5,1.640064,256";
+                string labelResults2 = trackingNumber + ",T59CHU,element FAC 5,1.640064,256";
 
+                Log.Information($"employeeNo: {employeeNo}; machine: {machine} ");
                 Log.Information($"labelParams: {labelParams2}");
                 Log.Information($"labelResults: {labelResults2}");
                 objResult = objFITS.fn_Insert(operationType, modelType, operation, labelParams2, labelResults2, fsp, employeeNo, shift, machine, timestamp, revision);
@@ -295,7 +319,7 @@ namespace PushSPCToFITs.Tasks
 
 
         /// <summary>
-        /// Check if the SPC data is needed to push to FITs since charts "element fac" and "element sac dev from target" do not exist in FITs 
+        /// Check if the SPC data is needed to push to FITs since charts "element fac" and "element sac dev from target" do not exist in FITs/SPC 
         /// </summary>
         /// <param name="pendingData"></param>
         /// <returns></returns>
