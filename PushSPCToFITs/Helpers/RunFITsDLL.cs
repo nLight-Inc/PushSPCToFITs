@@ -283,6 +283,12 @@ namespace PushSPCToFITs.Helpers
             return requestParams;
         }
 
+        /// <summary>
+        /// Compose FITs requestParams using FITs object and pending SPC data of a specific test, it's used in fn_Query to check if FITs data already exists
+        /// </summary>
+        /// <param name="sh">SPC Header of a specific test</param>
+        /// <param name="pendingData">pending SPC data of a specific test</param>
+        /// <returns></returns>
         public FITsRequestParams GetSPCRequestParamsForQuery(SPCHeader sh, ICollection<GetPendingData> pendingData)
         {
             FITsRequestParams requestParams = new FITsRequestParams();
