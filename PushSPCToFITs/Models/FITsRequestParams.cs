@@ -21,5 +21,7 @@ namespace PushSPCToFITs.Models
 
         public string revision { get; set; }
 
+        public string serialNumber { get; set; }
+
     }
 }

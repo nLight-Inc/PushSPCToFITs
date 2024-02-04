@@ -45,8 +45,8 @@ namespace PushSPCToFITs.Tasks
         #region Properties
         public bool _stopService = false;
         protected int _backTracking = 30;
-        protected int _sleepSeconds = 15000; //Run pushing task every 15 seconds
-        protected int _SPCHeaderID_topN_ToProcess = 10;
+        protected int _sleepSeconds = 15000; //If not defined in app.config file, then use this value to run pushing task every 15 seconds
+        protected int _SPCHeaderID_topN_ToProcess = 10; //If not defined in app.config file, then use this value to get top 10 SPCHeaderIDs everytime
         private string userName = "";
         private System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
         private System.Diagnostics.Stopwatch swd = new System.Diagnostics.Stopwatch();
@@ -72,8 +72,6 @@ namespace PushSPCToFITs.Tasks
                 StartLogging.StartLogger();
                 try
                 {
-                    SetTaskSpecificDefaults();
-
                     ICollection<SPCHeader> SPCHeader = GetSPCHeader(); //Get top _SPCHeaderID_topN_ToProcess pending SPC Header using LIFO method
                     RunFITsDLL rfd = new RunFITsDLL();
                     FITSDLL.clsDB objFITs = rfd.GetFITsConnection();
@@ -85,37 +83,41 @@ namespace PushSPCToFITs.Tasks
                             sw.Start();
                             ICollection<GetPendingData> pendingData = GetPendingData(s.ID); //Get SPC content from dbo.vwSPCData by feedbing SPC Header ID
 
-                            bool FITsNeed_flag = CheckFITsNeed(pendingData);
-                            string[] splitResultParams;
-                            if (FITsNeed_flag)
+                            if (!rfd.FITsDataExists(objFITs, s, pendingData))
                             {
-                                requestParams = rfd.GetSPCRequestParams(objFITs, pendingData);
-                                splitResultParams = requestParams.resultParams.ToString().Split(',');
 
-                                if (rfd.InsertSPCToFITs(objFITs, requestParams))
+
+                                bool FITsNeed_flag = CheckFITsNeed(pendingData);
+                                string[] splitResultParams;
+                                if (FITsNeed_flag)
                                 {
-                                    UpdateSPCHeader(s, true, splitResultParams[0], true);
-                                    Log.Information($"FITs inserted successfully for SPCHeaderID {s.ID} , SerialNumber {s.SerialNumber} ");
+                                    requestParams = rfd.GetSPCRequestParams(objFITs, pendingData);
+                                    splitResultParams = requestParams.resultParams.ToString().Split(',');
+
+                                    if (rfd.InsertSPCToFITs(objFITs, requestParams))
+                                    {
+                                        UpdateSPCHeader(s, true, splitResultParams[0], true);
+                                        Log.Information($"FITs inserted successfully for SPCHeaderID {s.ID} , SerialNumber {s.SerialNumber} ");
+                                    }
+                                    else
+                                    {
+                                        UpdateSPCHeader(s, false, splitResultParams[0], true);
+                                        Log.Information($"FITs inserted unsuccessfully for need SPCHeaderID {s.ID} , SerialNumber {s.SerialNumber} ");
+                                    }
                                 }
                                 else
                                 {
-                                    UpdateSPCHeader(s, false, splitResultParams[0], true);
-                                    Log.Information($"FITs inserted unsuccessfully for need SPCHeaderID {s.ID} , SerialNumber {s.SerialNumber} ");
+                                    UpdateSPCHeader(s, false, null, false);
+                                    Log.Information($"FITs does not need for SPCHeaderID {s.ID} , SerialNumber {s.SerialNumber} ");
                                 }
+                                sw.Stop();
                             }
                             else
                             {
-                                
-                                UpdateSPCHeader(s, false, null, false);
-                                Log.Information($"FITs does not need for SPCHeaderID {s.ID} , SerialNumber {s.SerialNumber} ");
+                                UpdateSPCHeader(s, true, s.Tracking_number, true);
+                                Log.Information($"FITs corrected processedSuccessToFITs_flag to be true for SPCHeaderID {s.ID} , SerialNumber {s.SerialNumber} ");
                             }
-
-
-
-
-                            sw.Stop();
                         }
-
                         Log.Information($"Completed pushing SPC header ID with Qty = {SPCHeader.Count} ");
                     }
                     System.Threading.Thread.Sleep(_sleepSeconds); //  Stop for at least 1 second to prevent continuous error retries
@@ -140,6 +142,7 @@ namespace PushSPCToFITs.Tasks
         {
             _backTracking = Common.ReadAppSetting("BackTracking", _backTracking);
             _sleepSeconds = Common.ReadAppSetting("SleepSeconds", _sleepSeconds);
+            _SPCHeaderID_topN_ToProcess = Common.ReadAppSetting("SPCHeaderID_topN_ToProcess", _SPCHeaderID_topN_ToProcess);
         }
 
         /// <summary>
