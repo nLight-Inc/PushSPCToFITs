@@ -72,59 +72,64 @@ namespace PushSPCToFITs.Tasks
                 StartLogging.StartLogger();
                 try
                 {
-                    ICollection<SPCHeader> SPCHeader = GetSPCHeader(); //Get top _SPCHeaderID_topN_ToProcess pending SPC Header using LIFO method
-                    RunFITsDLL rfd = new RunFITsDLL();
-                    FITSDLL.clsDB objFITs = rfd.GetFITsConnection();
+                    ICollection<SPCHeader> spcHeaders = GetSPCHeader(); //Get top _SPCHeaderID_topN_ToProcess pending SPC Header using LIFO method
+                    FITsClient fitsClient = new FITsClient();
+                    FITSDLL.clsDB objFITs = fitsClient.GetFITsConnection();
                     FITsRequestParams requestParams = new FITsRequestParams();
-                    if (SPCHeader.Count > 0)
+                    
+                    if (spcHeaders.Count > 0)
                     {
-                        foreach (SPCHeader s in SPCHeader)
+                        //Go through each SPCHeaderID for FITs data insert
+                        foreach (SPCHeader spcHeader in spcHeaders)
                         {
                             sw.Start();
-                            ICollection<GetPendingData> pendingData = GetPendingData(s.ID); //Get SPC content from dbo.vwSPCData by feedbing SPC Header ID
+                            ICollection<GetPendingData> pendingData = GetPendingData(spcHeader.ID); //Get SPC content from dbo.vwSPCData by feedbing SPC Header ID
 
-                            if (!rfd.FITsDataExists(objFITs, s, pendingData))
+                            bool FITsNeed_flag = CheckFITsNeed(pendingData);
+
+                            //Check if the data is FITs needed, if yes, continue the process; if not, skip it and update FITsNeed_flag = false 
+                            if (FITsNeed_flag)
                             {
-
-
-                                bool FITsNeed_flag = CheckFITsNeed(pendingData);
-                                string[] splitResultParams;
-                                if (FITsNeed_flag)
+                                //Check if the data exist in FITs already, if yes, update processedSuccessToFITs_flag = true; if not, continue the process
+                                if (!fitsClient.FITsDataExists(objFITs, spcHeader, pendingData))
                                 {
-                                    requestParams = rfd.GetSPCRequestParams(objFITs, pendingData);
+                                    string[] splitResultParams;
+                                
+                                    requestParams = fitsClient.GetSPCRequestParams(objFITs, pendingData);
                                     splitResultParams = requestParams.resultParams.ToString().Split(',');
 
-                                    if (rfd.InsertSPCToFITs(objFITs, requestParams))
+                                    if (fitsClient.InsertSPCToFITs(objFITs, requestParams))
                                     {
-                                        UpdateSPCHeader(s, true, splitResultParams[0], true);
-                                        Log.Information($"FITs inserted successfully for SPCHeaderID {s.ID} , SerialNumber {s.SerialNumber} ");
+                                        UpdateSPCHeader(spcHeader, true, splitResultParams[0], true);
+                                        Log.Information($"FITs insert succeeded for SPCHeaderID {spcHeader.ID} , SerialNumber {spcHeader.SerialNumber} ");
                                     }
                                     else
                                     {
-                                        UpdateSPCHeader(s, false, splitResultParams[0], true);
-                                        Log.Information($"FITs inserted unsuccessfully for need SPCHeaderID {s.ID} , SerialNumber {s.SerialNumber} ");
+                                        UpdateSPCHeader(spcHeader, false, splitResultParams[0], true);
+                                        Log.Information($"FITs insert failed for need SPCHeaderID {spcHeader.ID} , SerialNumber {spcHeader.SerialNumber} ");
                                     }
                                 }
                                 else
                                 {
-                                    UpdateSPCHeader(s, false, null, false);
-                                    Log.Information($"FITs does not need for SPCHeaderID {s.ID} , SerialNumber {s.SerialNumber} ");
+                                    UpdateSPCHeader(spcHeader, true, spcHeader.Tracking_number, true);
+                                    Log.Information($"FITs corrected processedSuccessToFITs_flag to be true for SPCHeaderID {spcHeader.ID} , SerialNumber {spcHeader.SerialNumber} ");
+                                   
                                 }
                                 sw.Stop();
                             }
                             else
                             {
-                                UpdateSPCHeader(s, true, s.Tracking_number, true);
-                                Log.Information($"FITs corrected processedSuccessToFITs_flag to be true for SPCHeaderID {s.ID} , SerialNumber {s.SerialNumber} ");
+                                UpdateSPCHeader(spcHeader, false, null, false);
+                                Log.Information($"FITs does not need for SPCHeaderID {spcHeader.ID} , SerialNumber {spcHeader.SerialNumber} ");
                             }
                         }
-                        Log.Information($"Completed pushing SPC header ID with Qty = {SPCHeader.Count} ");
+                        Log.Information($"Completed pushing SPC header ID with Qty = {spcHeaders.Count} ");
                     }
                     System.Threading.Thread.Sleep(_sleepSeconds); //  Stop for at least 1 second to prevent continuous error retries
                 }
                 catch (Exception e)
                 {
-                    _stopService = true;
+                    _stopService = true;  //Stop the service if the exception is not processed by existed catch block
 
                     StringBuilder body = new StringBuilder();
                     body.AppendLine().Append("\n\nThe PushSPCToFITs service has been stopped");
@@ -148,7 +153,7 @@ namespace PushSPCToFITs.Tasks
         /// <summary>
         /// Get top _SPCHeaderID_topN_ToProcess pending SPCHeader list
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Pending SPCHeaders to be pushed into FITs</returns>
         protected ICollection<SPCHeader> GetSPCHeader()
         {
 
@@ -173,7 +178,7 @@ namespace PushSPCToFITs.Tasks
         /// Get SPC Data details for specific SPCHeaderID
         /// </summary>
         /// <param name="SPCHeaderID"></param>
-        /// <returns></returns>
+        /// <returns>Pending SPCData details to be pushed into FITs</returns>
         protected ICollection<GetPendingData> GetPendingData(int SPCHeaderID)
         {
             ICollection<GetPendingData> toProcess = new List<GetPendingData>();
@@ -206,20 +211,15 @@ namespace PushSPCToFITs.Tasks
         /// <param name="processedSuccessToFITs_flag">FITs fn_Insert success/failure</param>
         /// <param name="trackingNumber">FITs tracking number to position the data in FITs</param>
         /// <param name="fitsNeed_flag">Identify the SPC data is needed by FITs or not</param>
-        protected void UpdateSPCHeader(SPCHeader sh, bool processedSuccessToFITs_flag, string trackingNumber, bool fitsNeed_flag)
+        protected void UpdateSPCHeader(SPCHeader spcHeader, bool processedSuccessToFITs_flag, string trackingNumber, bool fitsNeed_flag)
         {
             try
             {
                 using (NEQdbContext nEQdbContext = new NEQdbContext())
                 {
-
                     SPCHeader sph = nEQdbContext.SPCHeader
-                        .Where(spch => spch.ID == sh.ID)
+                        .Where(spch => spch.ID == spcHeader.ID)
                         .FirstOrDefault();
-
-
-
-
 
                     if (fitsNeed_flag)
                     {
@@ -246,11 +246,10 @@ namespace PushSPCToFITs.Tasks
         }
 
 
-
         /// <summary>
-        /// This function is used for FITs testing with hard coded data
+        /// This function is used for FITs testing with hard coded data, developer can follow to feed similiar data to test if inserting FITs can be successful
         /// </summary>
-        /// <returns></returns>
+        /// TODO: use security jason to avoid plain text storing credentials
         public void TestFITs()
         {
             Log.Information($"The FITsConnection function starts. ");
@@ -325,7 +324,7 @@ namespace PushSPCToFITs.Tasks
         /// Check if the SPC data is needed to push to FITs since charts "element fac" and "element sac dev from target" do not exist in FITs/SPC 
         /// </summary>
         /// <param name="pendingData"></param>
-        /// <returns></returns>
+        /// <returns>It's true if it's needed by FITs, false if it's not needed by FITs</returns>
         protected bool CheckFITsNeed(ICollection<GetPendingData> pendingData)
         {
             bool FITsNeed = true;
@@ -336,7 +335,6 @@ namespace PushSPCToFITs.Tasks
                 case "element sac dev from target": FITsNeed = false; break;
                 default: FITsNeed = true; break;
             }
-
             return FITsNeed;
         }
 

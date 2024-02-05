@@ -11,7 +11,7 @@ using System.Text;
 
 // https://www.codeproject.com/Articles/572263/A-Reusable-Base-Class-for-the-Singleton-Pattern-in
 
-
+//TODO: not necessary for this project, can be removed
 namespace PushSPCToFITs.Tasks
 {
     public class ProductionTask : BaseTask<ProductionTask>
