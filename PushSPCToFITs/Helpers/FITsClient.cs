@@ -17,7 +17,7 @@ namespace PushSPCToFITs.Helpers
         /// <summary>
         /// Get FITs object through FITSDLL fn_Logon function
         /// </summary>
-        /// <returns>FITs object to be used for fn_Handshake, fn_Insert, fn_Query etc. </returns>
+        /// <returns></returns>
         public clsDB GetFITsConnection()
         {
             Log.Information($"The FITsConnection function starts. ");
@@ -60,7 +60,7 @@ namespace PushSPCToFITs.Helpers
         /// <param name="objFITs">FITs object</param>
         /// <param name="requestParams">FITs request parameters</param>
         /// <param name="resultParams">FITs result parameters of requst parameters to be pushed into FITs</param>
-        /// <returns>Tracking number to be used for fn_Insert, fn_Query etc.</returns>
+        /// <returns></returns>
         public string GetTrackingNumber(clsDB objFITs, FITsRequestParams requestParams, FITsResultParams resultParams)
         {
             string serialNumber = string.Empty;
@@ -103,8 +103,8 @@ namespace PushSPCToFITs.Helpers
         /// Compose FITs requestParams using FITs object and pending SPC data of a specific test
         /// </summary>
         /// <param name="objFITs">FITs object</param>
-        /// <param name="pendingData">pending SPCData details of a specific test</param>
-        /// <returns>RequsetParams class to be used for fn_Insert</returns>
+        /// <param name="pendingData">pending SPC data of a specific test</param>
+        /// <returns></returns>
         public FITsRequestParams GetSPCRequestParams(clsDB objFITs, ICollection<GetPendingData> pendingData)
         {
             FITsRequestParams requestParams = new FITsRequestParams();
@@ -258,7 +258,7 @@ namespace PushSPCToFITs.Helpers
                             requestParams.modelType = "SPC for Element";
                             requestParams.operation = "SPC15";
                         }
-                        else if (gdf.PartGroup == "GS Pearl Chiplet") //for PartGroup=GS Pearl Chiplet
+                        else //for PartGroup=GS Pearl Chiplet
                         {
                             requestParams.modelType = "SPC for Pearl";
                             requestParams.operation = "SPCP04";
@@ -283,13 +283,7 @@ namespace PushSPCToFITs.Helpers
             return requestParams;
         }
 
-        /// <summary>
-        /// Compose FITs requestParams using FITs object and pending SPC data of a specific test, it's used in fn_Query to check if FITs data already exists
-        /// </summary>
-        /// <param name="sh">SPC Header of a specific test</param>
-        /// <param name="pendingData">pending SPC data of a specific test</param>
-        /// <returns>RequsetParams class to be used for fn_Query</returns>
-        public FITsRequestParams GetSPCRequestParamsForQuery(SPCHeader spcHeader, ICollection<GetPendingData> pendingData)
+        public FITsRequestParams GetSPCRequestParamsForQuery(SPCHeader sh, ICollection<GetPendingData> pendingData)
         {
             FITsRequestParams requestParams = new FITsRequestParams();
             try
@@ -299,7 +293,7 @@ namespace PushSPCToFITs.Helpers
                 GetPendingData gdf = pendingData.First();
 
                 requestParams.revision = "";
-                requestParams.serialNumber = spcHeader.Tracking_number;
+                requestParams.serialNumber = sh.Tracking_number;
                 requestParams.fsp = ",";
 
                 //Remove "_TE" characters from station name
@@ -436,7 +430,7 @@ namespace PushSPCToFITs.Helpers
                             requestParams.modelType = "SPC for Element";
                             requestParams.operation = "SPC15";
                         }
-                        else if (gdf.PartGroup == "GS Pearl Chiplet")//for PartGroup=GS Pearl Chiplet
+                        else //for PartGroup=GS Pearl Chiplet
                         {
                             requestParams.modelType = "SPC for Pearl";
                             requestParams.operation = "SPCP04";
@@ -445,7 +439,7 @@ namespace PushSPCToFITs.Helpers
                         break;
                 }
 
-                requestParams.resultParams = spcHeader.Tracking_number + "," + requestParams.resultParams;
+                requestParams.resultParams = sh.Tracking_number + "," + requestParams.resultParams;
             }
             catch (Exception e)
             {
@@ -465,7 +459,7 @@ namespace PushSPCToFITs.Helpers
         /// </summary>
         /// <param name="objFITs">FITs object</param>
         /// <param name="requestParams">Input requstParams to be pushed into FITs</param>
-        /// <returns>true: fn_Insert succeeds; false: fn_Insert fails</returns>
+        /// <returns></returns>
         public bool InsertSPCToFITs(clsDB objFITs, FITsRequestParams requestParams)
         {
             bool result = false;
@@ -495,7 +489,7 @@ namespace PushSPCToFITs.Helpers
         /// Remove "_TE" characters from station name as business does not needed it, Rebecca Jin confirmed it
         /// </summary>
         /// <param name="spcStationName"></param>
-        /// <returns>The station name being used in dbo.LkUpStationName</returns>
+        /// <returns></returns>
         public string DecryptStationName(string spcStationName)
         {
             string stationName = spcStationName;
@@ -515,14 +509,14 @@ namespace PushSPCToFITs.Helpers
         /// <param name="sh">SPCHeader data for 1 SPCHeaderID</param>
         /// <param name="pendingData">SPC detail data for 1 SPCHeaderID</param>
         /// <returns>true: the SPC data already exist in FITs; false: the SPC data does not exist in FITs</returns>
-        public bool FITsDataExists(clsDB objFITs, SPCHeader spcHeader, ICollection<GetPendingData> pendingData)
+        public bool FITsDataExists(clsDB objFITs, SPCHeader sh, ICollection<GetPendingData> pendingData)
         {
-            bool result = true;
+            bool result = false;
             try
             {
-                if (spcHeader.FITsNeed_flag != false && spcHeader.Tracking_number != null && spcHeader.ProcessedSuccessToFITs_flag == false)
+                if (sh.FITsNeed_flag != false && sh.Tracking_number != null && sh.ProcessedSuccessToFITs_flag == false)
                 {
-                    FITsRequestParams requestParams = GetSPCRequestParamsForQuery(spcHeader, pendingData);
+                    FITsRequestParams requestParams = GetSPCRequestParamsForQuery(sh, pendingData);
                     Log.Information($"Query labelParams: {requestParams.labelParams}");
                     ServiceResultQuery objResult = objFITs.fn_Query(requestParams.modelType, requestParams.operation, requestParams.revision, requestParams.serialNumber, requestParams.labelParams, requestParams.fsp);
                     if (objResult.outputValue != requestParams.resultParams)
@@ -530,6 +524,12 @@ namespace PushSPCToFITs.Helpers
                         Log.Information($"Query outputValue: {objResult.outputValue}");
                         Log.Information($"Existed composed resultParams: {requestParams.resultParams}");
                         result = false;
+                    }
+                    else
+                    {
+                        Log.Information($"Query outputValue: {objResult.outputValue}");
+                        Log.Information($"Existed composed resultParams: {requestParams.resultParams}");
+                        result = true;
                     }
                 }
             }

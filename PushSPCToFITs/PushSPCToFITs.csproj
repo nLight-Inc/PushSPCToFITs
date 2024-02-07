@@ -211,7 +211,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Tasks\BaseTask.cs" />
     <Compile Include="Tasks\CreateTasks.cs" />
-    <Compile Include="Tasks\ProductionTask.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

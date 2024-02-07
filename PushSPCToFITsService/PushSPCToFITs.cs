@@ -49,8 +49,8 @@ namespace PushSPCToFITsService
 
             try
             {
-                ProductionTask productionTask = ProductionTask.Instance;
-                productionTask._stopService = true;
+                BaseTask myTask = new BaseTask();
+                myTask._stopService = true;
 
                 //  if a thread has not finished within 3 minutes, let it die a painful death  --  Note, AX will time out after 1 minute, this gives us time to update the transactions external file with failure data, and end
 

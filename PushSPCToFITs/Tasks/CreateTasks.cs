@@ -8,7 +8,7 @@ namespace PushSPCToFITs.Tasks
         public Task[] StartTasks()
         {
             Task[] tasks = new Task[1];
-            ProductionTask myTask = ProductionTask.Instance;
+            BaseTask myTask = new BaseTask();
             Task tSPC = Task.Run(() =>
             {
                 Log.Information("{0} Starting task", this.GetType().Name);

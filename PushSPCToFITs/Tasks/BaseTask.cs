@@ -16,31 +16,9 @@ using FITSDLL;
 
 namespace PushSPCToFITs.Tasks
 {
-    public class BaseTask<Tclass> where Tclass : class
+    public class BaseTask
     {
-        #region Singleton
-
-        /// <summary>
-        /// Static instance. Needs to use lambda expression
-        /// to construct an instance (since constructor is private).
-        /// </summary>
-        private static readonly Lazy<Tclass> sInstance = new Lazy<Tclass>(() => CreateInstanceOfT());
-
-        /// <summary>
-        /// Creates an instance of T via reflection since T's constructor is expected to be private.
-        /// </summary>
-        /// <returns></returns>
-        private static Tclass CreateInstanceOfT()
-        {
-            return Activator.CreateInstance(typeof(Tclass), true) as Tclass;
-        }
-
-        /// <summary>
-        /// Gets the instance of this singleton.
-        /// </summary>
-        public static Tclass Instance { get { return sInstance.Value; } }
-
-        #endregion
+        
 
         #region Properties
         public bool _stopService = false;
@@ -245,7 +223,6 @@ namespace PushSPCToFITs.Tasks
             }
         }
 
-
         /// <summary>
         /// This function is used for FITs testing with hard coded data, developer can follow to feed similiar data to test if inserting FITs can be successful
         /// </summary>
@@ -317,8 +294,6 @@ namespace PushSPCToFITs.Tasks
 
 
         }
-
-
 
         /// <summary>
         /// Check if the SPC data is needed to push to FITs since charts "element fac" and "element sac dev from target" do not exist in FITs/SPC 

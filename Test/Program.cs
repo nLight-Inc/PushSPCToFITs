@@ -22,9 +22,9 @@ namespace Test
         {
             Console.WriteLine("\nSPC Data Loading Starts:");
 
-            ProductionTask SPCTask = ProductionTask.Instance;
+            BaseTask myTask = new BaseTask();
             //SPCTask.TestFITs();
-            SPCTask.RunTask();
+            myTask.RunTask();
             //Test_SendEmail();
         }
 
