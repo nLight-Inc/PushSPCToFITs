@@ -29,9 +29,32 @@ namespace PushSPCToFITsService
         /// </summary>
         private void InitializeComponent()
         {
-            components = new System.ComponentModel.Container();
+            this.serviceProcessInstaller1 = new System.ServiceProcess.ServiceProcessInstaller();
+            this.PushSPCToFITs = new System.ServiceProcess.ServiceInstaller();
+            // 
+            // serviceProcessInstaller1
+            // 
+            this.serviceProcessInstaller1.Password = null;
+            this.serviceProcessInstaller1.Username = null;
+            this.serviceProcessInstaller1.AfterInstall += new System.Configuration.Install.InstallEventHandler(this.serviceProcessInstaller1_AfterInstall);
+            // 
+            // PushSPCToFITs
+            // 
+            this.PushSPCToFITs.Description = "[nLIGHT] Push SPC Data to FITs system";
+            this.PushSPCToFITs.DisplayName = "nLIGHT_PushSPCToFITs";
+            this.PushSPCToFITs.ServiceName = "nLIGHT_PushSPCToFITs";
+            // 
+            // ProjectInstaller
+            // 
+            this.Installers.AddRange(new System.Configuration.Install.Installer[] {
+            this.serviceProcessInstaller1,
+            this.PushSPCToFITs});
+
         }
 
         #endregion
+
+        private System.ServiceProcess.ServiceProcessInstaller serviceProcessInstaller1;
+        private System.ServiceProcess.ServiceInstaller PushSPCToFITs;
     }
 }
