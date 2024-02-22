@@ -29,8 +29,7 @@ namespace PushSPCToFITs.Helpers
                         client.UseDefaultCredentials = false;
                         client.Host = "10.10.5.4";
                         mail.Subject = subject;
-                        
-                        mail.To.Add(to);                        
+                                                
                         mail.Body = emailBody;
                         client.Send(mail);
                     }

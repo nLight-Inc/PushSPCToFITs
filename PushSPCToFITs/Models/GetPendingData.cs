@@ -16,10 +16,10 @@ namespace PushSPCToFITs.Models
         public int Size { get; set; }
         public string Employee { get; set; }
         public string SerialNumber { get; set; }
-        public DateTime tmTest { get; set; }
+        public DateTime? tmTest { get; set; }
         public int? TestNumber { get; set; }
         public string? TestStation { get; set; }
-        public string WorkOrder { get; set; }
+        public string? WorkOrder { get; set; }
         public string? TestResult { get; set; }
         public string? TestOperator { get; set; }
         public string ParameterName { get; set; }
