@@ -60,14 +60,15 @@ namespace PushSPCToFITs.Tasks
                         //Go through each SPCHeaderID for FITs data insert
                         foreach (SPCHeader spcHeader in spcHeaders)
                         {
-                            sw.Start();
+                            sw.Restart();
+
                             ICollection<GetPendingData> pendingData = GetPendingData(spcHeader.ID); //Get SPC content from dbo.vwSPCData by feedbing SPC Header ID
 
                             bool FITsNeed_flag = CheckFITsNeed(pendingData);
 
                             //Check if the data is FITs needed, if yes, continue the process; if not, skip it and update FITsNeed_flag = false 
                             if (FITsNeed_flag)
-                            {
+                            {                                
                                 //Check if the data exist in FITs already, if yes, update processedSuccessToFITs_flag = true; if not, continue the process
                                 if (!fitsClient.FITsDataExists(objFITs, spcHeader, pendingData))
                                 {
@@ -93,7 +94,6 @@ namespace PushSPCToFITs.Tasks
                                     Log.Information($"FITs corrected processedSuccessToFITs_flag to be true for SPCHeaderID {spcHeader.ID} , SerialNumber {spcHeader.SerialNumber} ");
                                    
                                 }
-                                sw.Stop();
                             }
                             else
                             {
