@@ -7,6 +7,7 @@ namespace PushSPCToFITs.Models
     public class FITsResultParams
     {
         public string trackingNumber { get; set; }
+        public string cosPartNumber { get; set; }
         public string goldenSampleSN { get; set; }
         public string goldenCountTime { get; set; }
         public string scPartNumber { get; set; }

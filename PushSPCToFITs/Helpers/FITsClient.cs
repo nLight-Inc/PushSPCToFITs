@@ -249,21 +249,22 @@ namespace PushSPCToFITs.Helpers
                         requestParams.resultParams = resultParams.goldenSampleSN + "," + resultParams.mtStationNumber + "," + Convert.ToString(resultParams.voltage) + "," + Convert.ToString(resultParams.power) + "," + Convert.ToString(resultParams.waveCentroid) + "," + Convert.ToString(resultParams.snoutTemperature);
                         break;
                     case "se golden sample":
-                        requestParams.labelParams = "Tracking number,Golden Sample SN,SE Station#,Power,Wavelength";
-
+                        requestParams.labelParams = "Tracking number,CoS Part number,Golden Sample SN,SE Station#,Power,Wavelength";
+                        resultParams.cosPartNumber = gdf.SerialNumber;
                         resultParams.goldenSampleSN = gdf.SerialNumber;
                         resultParams.seStationNumber = stationName;
                         if (gdf.PartGroup == "GS CS") //for PartGroup=GS CS
                         {
                             requestParams.modelType = "SPC for Element";
                             requestParams.operation = "SPC15";
+                            requestParams.resultParams = resultParams.cosPartNumber + "," + resultParams.goldenSampleSN + "," + resultParams.seStationNumber + "," + Convert.ToString(resultParams.power) + "," + Convert.ToString(resultParams.wavelength);
                         }
                         else //for PartGroup=GS Pearl Chiplet
                         {
                             requestParams.modelType = "SPC for Pearl";
                             requestParams.operation = "SPCP04";
+                            requestParams.resultParams = resultParams.goldenSampleSN + "," + resultParams.seStationNumber + "," + Convert.ToString(resultParams.power) + "," + Convert.ToString(resultParams.wavelength);
                         }
-                        requestParams.resultParams = resultParams.goldenSampleSN + "," + resultParams.seStationNumber + "," + Convert.ToString(resultParams.power) + "," + Convert.ToString(resultParams.wavelength);
                         break;
                 }
 
