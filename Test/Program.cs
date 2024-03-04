@@ -23,7 +23,7 @@ namespace Test
             Console.WriteLine("\nSPC Data Loading Starts:");
 
             BaseTask myTask = new BaseTask();
-            //SPCTask.TestFITs();
+            //myTask.TestFITs();
             myTask.RunTask();
             //Test_SendEmail();
         }

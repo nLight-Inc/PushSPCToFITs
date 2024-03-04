@@ -15,7 +15,7 @@ namespace PushSPCToFITs.Models
         public string Part { get; set; }
         public string PartGroup { get; set; }
         public string Process { get; set; }
-        public string ProcessGroup { get; set; }
+        public string? ProcessGroup { get; set; }
         public int Size { get; set; }
         public string Employee { get; set; }
         public string SerialNumber { get; set; }

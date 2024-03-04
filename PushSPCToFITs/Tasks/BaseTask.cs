@@ -85,7 +85,7 @@ namespace PushSPCToFITs.Tasks
                                     else
                                     {
                                         UpdateSPCHeader(spcHeader, false, splitResultParams[0], true);
-                                        Log.Information($"FITs insert failed for need SPCHeaderID {spcHeader.ID} , SerialNumber {spcHeader.SerialNumber} ");
+                                        Log.Information($"FITs insert failed for SPCHeaderID {spcHeader.ID} , SerialNumber {spcHeader.SerialNumber} ");
                                     }
                                 }
                                 else
@@ -237,28 +237,26 @@ namespace PushSPCToFITs.Tasks
             string password = "n@AAz87ber";
 
             string modelTypeQuery = "SPC for Element";
-            string operationQuery = "SPC11";
-            string serialNumberQuery = "T59CHU";
+            string operationQuery = "SPC15";
+            string serialNumberQuery = "SPC152435_006";
             string revisionQuery = "";
-            string labelParamsQuery = "Tracking number,Golden Sample SN";
+            string labelParamsQuery = "Tracking number,CoS Part number,Golden Sample SN,SE Station#,Power,Wavelength";
             string fspQuery = ",";
 
             string modelType = "SPC for Element";
-            string operation = "SPC11";
-            string serialNumber = "T59CHU";
+            string operation = "SPC17";
+            string serialNumber = "WADRHF";
             int operationType = 0;
-            //string labelParams2 = "Tracking number,Golden Sample SN,Golden Count time,SC Part number,FAC Station#,FAC Beam Width,FAC Pointing,Comment,Result,Failure code";
-            string labelParams2 = "Tracking number,Golden Sample SN,FAC Station#,FAC Beam Width,FAC Pointing";
+            string labelParams = "Tracking number,Golden Sample SN,Module Part number,MT Station#,Voltage,Power,Wave Centroid,Snout Temperature";
+            string resultParams = "WADRHF,WADRHF,MT7,36.8352107605093,408.99644783648,977.776456486993,40.4000015258789";
             string revision = "";
             string fsp = ",";
-            //string employeeNo = "000001";
             string employeeNo = "Auto upload";
             string shift = "";
-            //string machine = "FAC No.5";
-            string machine = "element FAC 5";
+            string machine = "MT7";
 
 
-            DateTime timestamp2 = Convert.ToDateTime("12/21/2023  6:58:00 AM");
+            DateTime timestamp2 = Convert.ToDateTime("2024-02-27 19:37:30.303");
             string timestampStr = timestamp2.ToString("yyyy-MM-dd hh:mm:ss");
             DateTime timestamp = DateTime.ParseExact(timestampStr, "yyyy-MM-dd hh:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
 
@@ -276,13 +274,11 @@ namespace PushSPCToFITs.Tasks
 
                 string[] splitHandshakeMessage = objResult.message.ToString().Split(' ');
                 string trackingNumber = splitHandshakeMessage[splitHandshakeMessage.Length - 1];
-                //string labelResults2 = trackingNumber + ",T59CHU,FAC No.5,1.640064,256";
-                string labelResults2 = trackingNumber + ",T59CHU,element FAC 5,1.640064,256";
+                resultParams = trackingNumber + "," + resultParams;
 
-                Log.Information($"employeeNo: {employeeNo}; machine: {machine} ");
-                Log.Information($"labelParams: {labelParams2}");
-                Log.Information($"labelResults: {labelResults2}");
-                objResult = objFITS.fn_Insert(operationType, modelType, operation, labelParams2, labelResults2, fsp, employeeNo, shift, machine, timestamp, revision);
+                Log.Information($"labelParams: {labelParams}");
+                Log.Information($"labelResults: {resultParams}");
+                objResult = objFITS.fn_Insert(operationType, modelType, operation, labelParams, resultParams, fsp, employeeNo, shift, machine, timestamp, revision);
                 Log.Information($"The FITs fn_Insert with Tracking number result is {objResult.result}, messge is {objResult.message}, outputValue is {objResult.outputValue.ToString()} ");
 
 

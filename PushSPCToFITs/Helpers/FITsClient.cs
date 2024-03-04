@@ -124,7 +124,7 @@ namespace PushSPCToFITs.Helpers
                 requestParams.machine = stationName;
 
                 //Format test date into FITs standardard yyyy-MM-dd hh:mm:ss
-                DateTime timeTest = Convert.ToDateTime(gdf.tmTest);
+                DateTime timeTest = Convert.ToDateTime(gdf.Created_date);
                 string timestampStr = timeTest.ToString("yyyy-MM-dd hh:mm:ss");
                 requestParams.timeTestFITs = DateTime.ParseExact(timestampStr, "yyyy-MM-dd hh:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
 
@@ -370,13 +370,14 @@ namespace PushSPCToFITs.Helpers
                 switch (gdf.ChartName)
                 {
                     case "element fac golden sample":
-                        requestParams.labelParams = "Tracking number,Golden Sample SN,FAC Station#,FAC Beam Width,FAC Pointing";
+                        requestParams.labelParams = "Tracking number,Golden Sample SN,SC Part number,FAC Station#,FAC Beam Width,FAC Pointing";
                         requestParams.modelType = "SPC for Element";
                         requestParams.operation = "SPC11";
                         resultParams.goldenSampleSN = (gdf.SerialNumber != null) ? gdf.SerialNumber : "-";
+                        resultParams.scPartNumber = gdf.Part;
                         resultParams.facStationNumber = stationName;
 
-                        requestParams.resultParams = resultParams.goldenSampleSN + "," + resultParams.facStationNumber + "," + Convert.ToString(resultParams.facBeamWidth) + "," + Convert.ToString(resultParams.facPointing);
+                        requestParams.resultParams = resultParams.goldenSampleSN + "," + resultParams.scPartNumber + "," + resultParams.facStationNumber + "," + Convert.ToString(resultParams.facBeamWidth) + "," + Convert.ToString(resultParams.facPointing);
                         break;
                     case "element fac dev from target":
                         requestParams.labelParams = "Tracking number,FBN W/O,Supercarrier SN,SC Part number,FAC Station#,FAC Beam Width,FAC Pointing";
@@ -390,13 +391,14 @@ namespace PushSPCToFITs.Helpers
                         requestParams.resultParams = resultParams.fbnWO + "," + resultParams.supercarrierSN + "," + resultParams.scPartNumber + "," + resultParams.facStationNumber + "," + Convert.ToString(resultParams.facBeamWidth) + "," + Convert.ToString(resultParams.facPointing);
                         break;
                     case "element sac golden sample":
-                        requestParams.labelParams = "Tracking number,Golden Sample SN,SAC station#,FAC Beam Width,FAC Pointing,SAC Beam Width,SAC Power";
+                        requestParams.labelParams = "Tracking number,Golden Sample SN,SC Part number,SAC station#,FAC Beam Width,FAC Pointing,SAC Beam Width,SAC Power";
                         requestParams.modelType = "SPC for Element";
                         requestParams.operation = "SPC13";
                         resultParams.goldenSampleSN = gdf.SerialNumber;
+                        resultParams.scPartNumber = gdf.Part;
                         resultParams.sacStationNumber = stationName;
 
-                        requestParams.resultParams = resultParams.goldenSampleSN + "," + resultParams.sacStationNumber + "," + Convert.ToString(resultParams.facBeamWidth) + "," + Convert.ToString(resultParams.facPointing) + "," + Convert.ToString(resultParams.sacBeamWidth) + "," + Convert.ToString(resultParams.sacPower);
+                        requestParams.resultParams = resultParams.goldenSampleSN + "," + resultParams.scPartNumber + "," + resultParams.sacStationNumber + "," + Convert.ToString(resultParams.facBeamWidth) + "," + Convert.ToString(resultParams.facPointing) + "," + Convert.ToString(resultParams.sacBeamWidth) + "," + Convert.ToString(resultParams.sacPower);
                         break;
                     case "element sac":
                         requestParams.labelParams = "Tracking number,FBN W/O,Supercarrier SN,SC Part number,SAC Station#,SAC Beam Width,SAC Pointing,SAC Power";
@@ -410,40 +412,45 @@ namespace PushSPCToFITs.Helpers
                         requestParams.resultParams = resultParams.fbnWO + "," + resultParams.supercarrierSN + "," + resultParams.scPartNumber + "," + resultParams.sacStationNumber + "," + Convert.ToString(resultParams.sacBeamWidth) + "," + Convert.ToString(resultParams.sacPointing) + "," + Convert.ToString(resultParams.sacPower);
                         break;
                     case "element mirror golden sample":
-                        requestParams.labelParams = "Tracking number,Golden Sample SN,Mirror Station#,Power";
+                        requestParams.labelParams = "Tracking number,Golden Sample SN,Module Part number,Mirror Station#,Power";
                         requestParams.modelType = "SPC for Element";
                         requestParams.operation = "SPC16";
                         resultParams.goldenSampleSN = gdf.SerialNumber;
+                        resultParams.modulePartNumber = gdf.Part;
                         resultParams.mirrorStationNumber = stationName;
 
-                        requestParams.resultParams = resultParams.goldenSampleSN + "," + resultParams.mirrorStationNumber + "," + Convert.ToString(resultParams.power);
+                        requestParams.resultParams = resultParams.goldenSampleSN + "," + resultParams.modulePartNumber + "," + resultParams.mirrorStationNumber + "," + Convert.ToString(resultParams.power);
                         break;
                     case "element mt golden sample":
-                        requestParams.labelParams = "Tracking number,Golden Sample SN,MT Station#,Voltage,Power,Wave Centroid,Snout Temperature";
+                        requestParams.labelParams = "Tracking number,Golden Sample SN,Module Part number,MT Station#,Voltage,Power,Wave Centroid,Snout Temperature";
                         requestParams.modelType = "SPC for Element";
                         requestParams.operation = "SPC17";
                         resultParams.goldenSampleSN = gdf.SerialNumber;
+                        resultParams.modulePartNumber = gdf.Part;
                         resultParams.mtStationNumber = stationName;
 
-                        requestParams.resultParams = resultParams.goldenSampleSN + "," + resultParams.mtStationNumber + "," + Convert.ToString(resultParams.voltage) + "," + Convert.ToString(resultParams.power) + "," + Convert.ToString(resultParams.waveCentroid) + "," + Convert.ToString(resultParams.snoutTemperature);
+                        requestParams.resultParams = resultParams.goldenSampleSN + "," + resultParams.modulePartNumber + "," + resultParams.mtStationNumber + "," + Convert.ToString(resultParams.voltage) + "," + Convert.ToString(resultParams.power) + "," + Convert.ToString(resultParams.waveCentroid) + "," + Convert.ToString(resultParams.snoutTemperature);
                         break;
                     case "se golden sample":
-                        requestParams.labelParams = "Tracking number,Golden Sample SN,SE Station#,Power,Wavelength";
-
                         resultParams.goldenSampleSN = gdf.SerialNumber;
                         resultParams.seStationNumber = stationName;
                         if (gdf.PartGroup == "GS CS") //for PartGroup=GS CS
                         {
                             requestParams.modelType = "SPC for Element";
                             requestParams.operation = "SPC15";
+                            requestParams.labelParams = "Tracking number,CoS Part number,Golden Sample SN,SE Station#,Power,Wavelength";
+                            resultParams.cosPartNumber = gdf.SerialNumber;
+                            requestParams.resultParams = resultParams.cosPartNumber + "," + resultParams.goldenSampleSN + "," + resultParams.seStationNumber + "," + Convert.ToString(resultParams.power) + "," + Convert.ToString(resultParams.wavelength);
                         }
                         else //for PartGroup=GS Pearl Chiplet
                         {
                             requestParams.modelType = "SPC for Pearl";
                             requestParams.operation = "SPCP04";
+                            requestParams.labelParams = "Tracking number,Chiplet Part Number,Golden Sample SN,SE Station#,Power,Wavelength";
+                            resultParams.chipletPartNumber = gdf.SerialNumber;
+                            requestParams.resultParams = resultParams.chipletPartNumber + "," + resultParams.goldenSampleSN + "," + resultParams.seStationNumber + "," + Convert.ToString(resultParams.power) + "," + Convert.ToString(resultParams.wavelength);
                         }
-                        requestParams.resultParams = resultParams.goldenSampleSN + "," + resultParams.seStationNumber + "," + Convert.ToString(resultParams.power) + "," + Convert.ToString(resultParams.wavelength);
-                        break;
+                       break;
                 }
 
                 requestParams.resultParams = sh.Tracking_number + "," + requestParams.resultParams;
