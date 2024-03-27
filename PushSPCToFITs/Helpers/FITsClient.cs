@@ -117,74 +117,75 @@ namespace PushSPCToFITs.Helpers
                 requestParams.operationType = 0;
                 requestParams.revision = "";
                 requestParams.fsp = ",";
-                requestParams.employeeNo = gdf.Employee; // "000001"; //To be replaced by real 6 digital number recognized by FITs
+                requestParams.employeeNo = gdf.Employee; 
                 requestParams.shift = "";
                 //Remove "_TE" characters from station name
                 string stationName = DecryptStationName(gdf.Process);
                 requestParams.machine = stationName;
 
                 //Format test date into FITs standardard yyyy-MM-dd hh:mm:ss
-                DateTime timeTest = Convert.ToDateTime(gdf.Created_date);
-                string timestampStr = timeTest.ToString("yyyy-MM-dd hh:mm:ss");
-                requestParams.timeTestFITs = DateTime.ParseExact(timestampStr, "yyyy-MM-dd hh:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
+                //DateTime timeTest = Convert.ToDateTime(gdf.Created_date);
+                DateTime timeTest = DateTime.Now; //It's current date time since FITSDLL does not accept back date, Vuttichai Saijaroen said he will lock timestamp to actual no matter what timestamp feed to FITSDLL
+                string timestampStr = timeTest.ToString("yyyy-MM-dd HH:mm:ss");
+                requestParams.timeTestFITs = DateTime.ParseExact(timestampStr, "yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
 
                 foreach (GetPendingData gd in pendingData)
                 {
                     switch (gdf.ChartName + ", " + gd.ParameterName)
                     {
                         case "element fac golden sample, BW":
-                            resultParams.facBeamWidth = Convert.ToDouble(gd.ParameterValue);
+                            resultParams.facBeamWidth = gd.ParameterValue;
                             break;
                         case "element fac golden sample, Pointing":
-                            resultParams.facPointing = Convert.ToDouble(gd.ParameterValue);
+                            resultParams.facPointing = gd.ParameterValue;
                             break;
                         case "element fac dev from target, FA 1/e2 dev from target":
-                            resultParams.facBeamWidth = Convert.ToDouble(gd.ParameterValue);
+                            resultParams.facBeamWidth = gd.ParameterValue;
                             break;
                         case "element fac dev from target, FA centroid dev from target":
-                            resultParams.facPointing = Convert.ToDouble(gd.ParameterValue);
+                            resultParams.facPointing = gd.ParameterValue;
                             break;
                         case "element sac golden sample, FA BW":
-                            resultParams.facBeamWidth = Convert.ToDouble(gd.ParameterValue);
+                            resultParams.facBeamWidth = gd.ParameterValue;
                             break;
                         case "element sac golden sample, FA Pointing":
-                            resultParams.facPointing = Convert.ToDouble(gd.ParameterValue);
+                            resultParams.facPointing = gd.ParameterValue;
                             break;
                         case "element sac golden sample, SA BW":
-                            resultParams.sacBeamWidth = Convert.ToDouble(gd.ParameterValue);
+                            resultParams.sacBeamWidth = gd.ParameterValue;
                             break;
                         case "element sac golden sample, SAC Power":
-                            resultParams.sacPower = Convert.ToDouble(gd.ParameterValue);
+                            resultParams.sacPower = gd.ParameterValue;
                             break;
                         case "element sac, element SA 1/e2":
-                            resultParams.sacBeamWidth = Convert.ToDouble(gd.ParameterValue);
+                            resultParams.sacBeamWidth = gd.ParameterValue;
                             break;
                         case "element sac, element SA centroid":
-                            resultParams.sacPointing = Convert.ToDouble(gd.ParameterValue);
+                            resultParams.sacPointing = gd.ParameterValue;
                             break;
                         case "element sac, element SAC Power":
-                            resultParams.sacPower = Convert.ToDouble(gd.ParameterValue);
+                            resultParams.sacPower = gd.ParameterValue;
                             break;
                         case "se golden sample, GS Power":
-                            resultParams.power = Convert.ToDouble(gd.ParameterValue);
+                            resultParams.power = gd.ParameterValue;
                             break;
                         case "se golden sample, GS Wave centroid":
-                            resultParams.wavelength = Convert.ToDouble(gd.ParameterValue);
+                            resultParams.wavelength = gd.ParameterValue;
                             break;
                         case "element mirror golden sample, GS Power":
-                            resultParams.power = Convert.ToDouble(gd.ParameterValue);
+                            resultParams.power = gd.ParameterValue;
                             break;
                         case "element mt golden sample, GS voltage":
-                            resultParams.voltage = Convert.ToDouble(gd.ParameterValue);
+                            resultParams.voltage = gd.ParameterValue;
                             break;
                         case "element mt golden sample, GS Power":
-                            resultParams.power = Convert.ToDouble(gd.ParameterValue);
+                            resultParams.power = gd.ParameterValue;
                             break;
                         case "element mt golden sample, GS Wave centroid":
-                            resultParams.waveCentroid = Convert.ToDouble(gd.ParameterValue);
+                            resultParams.waveCentroid = gd.ParameterValue;
                             break;
                         case "element mt golden sample, GS Snout temperature":
-                            resultParams.snoutTemperature = Convert.ToDouble(gd.ParameterValue);
+                            resultParams.snoutTemperature = gd.ParameterValue;
                             break;
                     }
                 }
@@ -312,58 +313,58 @@ namespace PushSPCToFITs.Helpers
                     switch (gdf.ChartName + ", " + gd.ParameterName)
                     {
                         case "element fac golden sample, BW":
-                            resultParams.facBeamWidth = Convert.ToDouble(gd.ParameterValue);
+                            resultParams.facBeamWidth = gd.ParameterValue;
                             break;
                         case "element fac golden sample, Pointing":
-                            resultParams.facPointing = Convert.ToDouble(gd.ParameterValue);
+                            resultParams.facPointing = gd.ParameterValue;
                             break;
                         case "element fac dev from target, FA 1/e2 dev from target":
-                            resultParams.facBeamWidth = Convert.ToDouble(gd.ParameterValue);
+                            resultParams.facBeamWidth = gd.ParameterValue;
                             break;
                         case "element fac dev from target, FA centroid dev from target":
-                            resultParams.facPointing = Convert.ToDouble(gd.ParameterValue);
+                            resultParams.facPointing = gd.ParameterValue;
                             break;
                         case "element sac golden sample, FA BW":
-                            resultParams.facBeamWidth = Convert.ToDouble(gd.ParameterValue);
+                            resultParams.facBeamWidth = gd.ParameterValue;
                             break;
                         case "element sac golden sample, FA Pointing":
-                            resultParams.facPointing = Convert.ToDouble(gd.ParameterValue);
+                            resultParams.facPointing = gd.ParameterValue;
                             break;
                         case "element sac golden sample, SA BW":
-                            resultParams.sacBeamWidth = Convert.ToDouble(gd.ParameterValue);
+                            resultParams.sacBeamWidth = gd.ParameterValue;
                             break;
                         case "element sac golden sample, SAC Power":
-                            resultParams.sacPower = Convert.ToDouble(gd.ParameterValue);
+                            resultParams.sacPower = gd.ParameterValue;
                             break;
                         case "element sac, element SA 1/e2":
-                            resultParams.sacBeamWidth = Convert.ToDouble(gd.ParameterValue);
+                            resultParams.sacBeamWidth = gd.ParameterValue;
                             break;
                         case "element sac, element SA centroid":
-                            resultParams.sacPointing = Convert.ToDouble(gd.ParameterValue);
+                            resultParams.sacPointing = gd.ParameterValue;
                             break;
                         case "element sac, element SAC Power":
-                            resultParams.sacPower = Convert.ToDouble(gd.ParameterValue);
+                            resultParams.sacPower = gd.ParameterValue;
                             break;
                         case "se golden sample, GS Power":
-                            resultParams.power = Convert.ToDouble(gd.ParameterValue);
+                            resultParams.power = gd.ParameterValue;
                             break;
                         case "se golden sample, GS Wave centroid":
-                            resultParams.wavelength = Convert.ToDouble(gd.ParameterValue);
+                            resultParams.wavelength = gd.ParameterValue;
                             break;
                         case "element mirror golden sample, GS Power":
-                            resultParams.power = Convert.ToDouble(gd.ParameterValue);
+                            resultParams.power = gd.ParameterValue;
                             break;
                         case "element mt golden sample, GS voltage":
-                            resultParams.voltage = Convert.ToDouble(gd.ParameterValue);
+                            resultParams.voltage = gd.ParameterValue;
                             break;
                         case "element mt golden sample, GS Power":
-                            resultParams.power = Convert.ToDouble(gd.ParameterValue);
+                            resultParams.power = gd.ParameterValue;
                             break;
                         case "element mt golden sample, GS Wave centroid":
-                            resultParams.waveCentroid = Convert.ToDouble(gd.ParameterValue);
+                            resultParams.waveCentroid = gd.ParameterValue;
                             break;
                         case "element mt golden sample, GS Snout temperature":
-                            resultParams.snoutTemperature = Convert.ToDouble(gd.ParameterValue);
+                            resultParams.snoutTemperature = gd.ParameterValue;
                             break;
                     }
                 }
@@ -479,8 +480,10 @@ namespace PushSPCToFITs.Helpers
             bool result = false;
             try
             {
+                Log.Information($"modelType: {requestParams.modelType}; operation: {requestParams.operation}; timestamp: {requestParams.timeTestFITs.ToString()}; machine: {requestParams.machine}") ;
                 Log.Information($"labelParams: {requestParams.labelParams}");
                 Log.Information($"labelResults: {requestParams.resultParams}");
+                
                 ServiceResult objResult = objFITs.fn_Insert(requestParams.operationType, requestParams.modelType, requestParams.operation, requestParams.labelParams, requestParams.resultParams, requestParams.fsp, requestParams.employeeNo, requestParams.shift, requestParams.machine, requestParams.timeTestFITs, requestParams.revision);
                 result = objResult.outputValue;
                 Log.Information($"The FITs fn_Insert result is {objResult.result}, messge is {objResult.message}, outputValue is {objResult.outputValue.ToString()} ");

@@ -25,6 +25,7 @@ namespace PushSPCToFITs.Tasks
         protected int _backTracking = 30;
         protected int _sleepSeconds = 15000; //If not defined in app.config file, then use this value to run pushing task every 15 seconds
         protected int _SPCHeaderID_topN_ToProcess = 10; //If not defined in app.config file, then use this value to get top 10 SPCHeaderIDs everytime
+        protected int _StartSPCHeaderID = 1429374; //It's the SPCHeaderID tested in 2024/3/27 10:22AM Fabrinet time
         private string userName = "";
         private System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
         private System.Diagnostics.Stopwatch swd = new System.Diagnostics.Stopwatch();
@@ -126,6 +127,7 @@ namespace PushSPCToFITs.Tasks
             _backTracking = Common.ReadAppSetting("BackTracking", _backTracking);
             _sleepSeconds = Common.ReadAppSetting("SleepSeconds", _sleepSeconds);
             _SPCHeaderID_topN_ToProcess = Common.ReadAppSetting("SPCHeaderID_topN_ToProcess", _SPCHeaderID_topN_ToProcess);
+            _StartSPCHeaderID = Common.ReadAppSetting("StartSPCHeaderID", _StartSPCHeaderID);
         }
 
         /// <summary>
@@ -140,8 +142,8 @@ namespace PushSPCToFITs.Tasks
             using (NEQdbContext nEQdbContext = new NEQdbContext())
             {
                 toProcess = nEQdbContext.SPCHeader
-                    .Where(sh => (sh.FITsNeed_flag == true || sh.FITsNeed_flag == null) && (sh.ProcessedSuccessToFITs_flag != true || sh.ProcessedSuccessToFITs_flag == null))
-                    .OrderByDescending(sh => sh.ID)
+                    .Where(sh => (sh.FITsNeed_flag == true || sh.FITsNeed_flag == null) && (sh.ProcessedSuccessToFITs_flag != true || sh.ProcessedSuccessToFITs_flag == null) && sh.ID > _StartSPCHeaderID)
+                    .OrderBy(sh => sh.ID)
                     .Take(_SPCHeaderID_topN_ToProcess)
                     .ToList();
             }
@@ -236,38 +238,39 @@ namespace PushSPCToFITs.Tasks
             string userName = "nLight";
             string password = "n@AAz87ber";
 
-            string modelTypeQuery = "SPC for Element";
-            string operationQuery = "SPC15";
-            string serialNumberQuery = "SPC152435_006";
-            string revisionQuery = "";
-            string labelParamsQuery = "Tracking number,CoS Part number,Golden Sample SN,SE Station#,Power,Wavelength";
-            string fspQuery = ",";
+            //string modelTypeQuery = "SPC for Element";
+            //string operationQuery = "SPC15";
+            //string serialNumberQuery = "SPC152435_006";
+            //string revisionQuery = "";
+            //string labelParamsQuery = "Tracking number,CoS Part number,Golden Sample SN,SE Station#,Power,Wavelength";
+            //string fspQuery = ",";
 
             string modelType = "SPC for Element";
-            string operation = "SPC17";
-            string serialNumber = "WADRHF";
+            string operation = "SPC12";
+            string serialNumber = "T4XVMN";
             int operationType = 0;
-            string labelParams = "Tracking number,Golden Sample SN,Module Part number,MT Station#,Voltage,Power,Wave Centroid,Snout Temperature";
-            string resultParams = "WADRHF,WADRHF,MT7,36.8352107605093,408.99644783648,977.776456486993,40.4000015258789";
+            string labelParams = "Tracking number,FBN W/O,Supercarrier SN,SC Part number,FAC Station#,FAC Beam Width,FAC Pointing";
+            string resultParams = "SPC122437_050,P406031802,T4XVMN,1098828,element FAC 10,0.3,450";
             string revision = "";
             string fsp = ",";
             string employeeNo = "Auto upload";
             string shift = "";
-            string machine = "MT7";
+            string machine = "element FAC 10";
 
 
-            DateTime timestamp2 = Convert.ToDateTime("2024-02-27 19:37:30.303");
-            string timestampStr = timestamp2.ToString("yyyy-MM-dd hh:mm:ss");
-            DateTime timestamp = DateTime.ParseExact(timestampStr, "yyyy-MM-dd hh:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
+            //DateTime timestamp2 = Convert.ToDateTime("2024-02-27 19:37:30.303");
+            DateTime timestamp2 = DateTime.Now;
+            string timestampStr = timestamp2.ToString("yyyy-MM-dd HH:mm:ss");
+            DateTime timestamp = DateTime.ParseExact(timestampStr, "yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
 
-
+            //Log.Information($"timestamp: {timestamp}");
             try
             {
                 ServiceResult LogonResult = objFITS.Logon(dbFITSName, userName, password);
                 Log.Information($"The FITs Logon result is {LogonResult.result}, message is {LogonResult.message}, outputValue is {LogonResult.outputValue.ToString()} ");
 
-                ServiceResultQuery objResultQuery = objFITS.fn_Query(modelTypeQuery, operationQuery, revisionQuery, serialNumberQuery, labelParamsQuery, fspQuery);
-                Log.Information($"The FITs fn_Query result is {objResultQuery.result}, messge is {objResultQuery.message}, outputValue is {objResultQuery.outputValue.ToString()} ");
+                //ServiceResultQuery objResultQuery = objFITS.fn_Query(modelTypeQuery, operationQuery, revisionQuery, serialNumberQuery, labelParamsQuery, fspQuery);
+                //Log.Information($"The FITs fn_Query result is {objResultQuery.result}, messge is {objResultQuery.message}, outputValue is {objResultQuery.outputValue.ToString()} ");
 
                 ServiceResult objResult = objFITS.fn_Handshake(modelType, operation, serialNumber);
                 Log.Information($"The FITs fn_Handshake result is {objResult.result}, messge is {objResult.message}, outputValue is {objResult.outputValue.ToString()} ");
